@@ -86,7 +86,7 @@ deberá venir expresado en semitonos.
 
 Use el programa `synth` para generar canciones a partir de su partitura MIDI. Como mínimo, deberá incluir la
 *orquestación* de la canción *You've got a friend in me* (fichero `ToyStory_A_Friend_in_me.sco`) del genial
-[Randy Newman](https://open.spotify.com/artist/3HQyFCFFfJO3KKBlUfZsyW/about).
+[Randy Newman](https://open.spotify.com/artist/3HQyFCFFfJO3KKBlUfZsyW).
 
 - En este triste arreglo, la pista 1 corresponde al instrumento solista (puede ser un piano, flautas,
   violines, etc.), y la 2 al bajo (bajo eléctrico, contrabajo, tuba, etc.).
