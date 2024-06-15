@@ -33,6 +33,20 @@ InstrumentSeno::InstrumentSeno(const std::string &param)
   if (!kv.to_int("I", interpolation))
     interpolation = 0; // default value
 
+  // float f_fundamental; //valor de la frecuencia fundamental del instrumento seno
+  // float f_discrete; //frecuencia normalizada (discreta)
+
+  // if (!kv.to_float("f",f_fundamental)) //cambiar "f" en caso que fuese otro carácter el que deberia ir
+  //     f_fundamental= 10; //default value (en herzios)
+
+  // f_discrete = f_fundamental/SamplingRate;
+
+  //   tbl.resize(N);
+  //   index = 0;
+  //   for (int i=0; i < N ; ++i) {
+  //     tbl[i] = sin(2*M_PI *f_discrete*i); //generación de la onda
+  //   }
+
   // Create a tbl with one period of a sinusoidal wave
   tbl.resize(N);
   float phase = 0, step = 2 * M_PI / (float)N;

@@ -18,6 +18,8 @@ A modo de memoria de la práctica, complete, en este mismo documento y usando el
 ejercicios indicados.
 
 Ejercicios.
+
+*mencionar que todos nuestros comentarios son escritos en cursivo*
 -----------
 
 ### Envolvente ADSR.
@@ -27,16 +29,35 @@ permitan visualizar el funcionamiento de la curva ADSR.
 
 * Un instrumento con una envolvente ADSR genérica, para el que se aprecie con claridad cada uno de sus
   parámetros: ataque (A), caída (D), mantenimiento (S) y liberación (R).
+
+  - *Podemos observar una ADSR genérica, con un ataque del 10% de duración, una caída del 20%, un mantenimiento del 50% y una liberación final del 20%.* 
+
+  ![gráfica de una ADSR genérica](img/ADSR_generica.png)
+
 * Un instrumento *percusivo*, como una guitarra o un piano, en el que el sonido tenga un ataque rápido, no
   haya mantenimiemto y el sonido se apague lentamente.
   - Para un instrumento de este tipo, tenemos dos situaciones posibles:
     * El intérprete mantiene la nota *pulsada* hasta su completa extinción.
+
+      - *podemos observar como no hay existencia (almenos apreciable) de la región de mantenimiento, y la caída hacia 0 del instrumento se compone de una decaída progresiva y gradual.*
+
+      ![gráfica de una ADSR percusiva (1)](img/ADSR_percusivo1.png)
+
     * El intérprete da por finalizada la nota antes de su completa extinción, iniciándose una disminución
 	  abrupta del sonido hasta su finalización.
+
+      - *ahora el tramo de liberación debe suponer una mayor extensión, debido a que, como dice el enunciado, el intérprete ha dado por finalizada la nota "antes de tiempo".*
+
+      ![gráfica de una ADSR percusiva (2)](img/ADSR_percusivo2.png)
+
   - Debera representar en esta memoria **ambos** posibles finales de la nota.
 * Un instrumento *plano*, como los de cuerdas frotadas (violines y semejantes) o algunos de viento. En
   ellos, el ataque es relativamente rápido hasta alcanzar el nivel de mantenimiento (sin sobrecarga), y la
   liberación también es bastante rápida.
+
+  - *podemos ver como el ADSR descrito abajo cumple con las condiciones de dicho tipo de instrumento:*
+
+  ![gráfica de una ADSR plana](img/ADSR_plano.png)
 
 Para los cuatro casos, deberá incluir una gráfica en la que se visualice claramente la curva ADSR. Deberá
 añadir la información necesaria para su correcta interpretación, aunque esa información puede reducirse a
@@ -48,9 +69,40 @@ Implemente el instrumento `Seno` tomando como modelo el `InstrumentDumb`. La se�
 mediante búsqueda de los valores en una tabla.
 
 - Incluya, a continuación, el código del fichero `seno.cpp` con los métodos de la clase Seno.
+
+**(añadir el código cuando esté finalizado)**
+```cpp
+
+```
 - Explique qué método se ha seguido para asignar un valor a la señal a partir de los contenidos en la tabla,
   e incluya una gráfica en la que se vean claramente (use pelotitas en lugar de líneas) los valores de la
   tabla y los de la señal generada.
+
+  *Como se ve en el for() del constructor de la clase **InstrumentSeno**, la tabla se construye en base a un periodo entero de una señal senoidal como cualquier otra, en incrementos que van en función del número de muestras que deseamos tener dentro de la tabla, es decir, como más puntos almacenemos, más pequeños serán los incrementos y por lo tanto tendremos el equivalente de un periodo de senoide almacenado en la tabla muestreado con frecuencia de muestreo más alta.*
+
+  *Cuando los valores estén ya dentro de la tabla, la recorremos con una velocidad determinada, cosa que viene dada por la frecuencia fundamental del propia instrumento seno mediante la conversión de nota a f0:*
+
+  ```cpp
+  f0 = 440.0f * pow(2.0f, (note - 69.0f) / 12.0f);
+  ```
+
+  *El recorrido de la tabla se realiza posterior a una llamada al método **command()**, donde en caso de iniciarse una nota, declaramos la variable que nos indica la velocidad a la cual recorrer la tabla, cuya línia de código se explicita a continuación:*
+
+  ```cpp
+  increment = ((f0 / SamplingRate) * tbl.size());
+  ```
+
+  *Gracias a esta variable, cuando llamemos al método **synthesize()**, podremos recorrer la tabla a la velocidad deseada. Por ejemplo, si nuestra tabla almacena 40 valores (valor default de N (tamaño de `tbl`)) para recorrer la tabla a velocidad de muestra a muestra (sin saltarnos ninguna, que en teoría podría entenderse como la velocidad más baja, aunque también sería posible ir 1/2 o 1/4 o menos de muestras/tick) nuestra frecuencia fundamental `f0` debe ser un 1/40 de la frecuencia de muestreo (declarada como `SamplingRate` en el código) que equivale a 44100 Hz.*
+
+  *Si quisiéramos recorrer la tabla a mayor velocidad y por lo tanto saltarnos muestras, como por ejemplo, ir de 2 en 2 muestras (el doble del caso anterior), debemos fijar `f0` al doble, por lo tanto a un 1/20 del `SamplingRate`. En este caso, el señal obtenido en base a la tabla `tbl` se construiria de la siguiente forma (si x[n] es el señal del instrumento y tbl[n] es la tabla donde se contienen los valores por defecto):*
+
+  *x[0] = tbl[1], x[1] = tbl[3], x[2] = tbl[5] ...*
+
+  *A continuación mostramos un gráfico donde se puede visualizar sobreimpuestos uno encima del otro, en pelotitas rojas, las muestras contenidas en la tabla `tbl[n]` y en pelotitas azules los muestras finales del señal construido, en el caso de f0 = 2 * SamplingRate:*
+
+  ![gráfico de muestras de la tabla vs señal construido](img/tblVsX.png)
+
+
 - Si ha implementado la síntesis por tabla almacenada en fichero externo, incluya a continuación el código
   del método `command()`.
 
