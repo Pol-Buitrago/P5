@@ -1,4 +1,5 @@
 #include <iostream>
+#include "effect.h"
 #include "tremolo.h"
 #include "vibrato.h"
 

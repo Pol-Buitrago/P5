@@ -17,10 +17,10 @@ los ficheros entregados deberán estar en condiciones de ser ejecutados con sól
 A modo de memoria de la práctica, complete, en este mismo documento y usando el formato *markdown*, los
 ejercicios indicados.
 
-Ejercicios.
+## Ejercicios.
+
 
 *mencionar que todos nuestros comentarios son escritos en cursivo*
------------
 
 ### Envolvente ADSR.
 
@@ -105,6 +105,36 @@ mediante búsqueda de los valores en una tabla.
 
 - Si ha implementado la síntesis por tabla almacenada en fichero externo, incluya a continuación el código
   del método `command()`.
+
+```cpp
+void InstrumentSeno::command(long cmd, long note, long vel) {
+    f0 = 440.0f * pow(2.0f, (note - 69.0f) / 12.0f); // Conversión de nota a frecuencia
+
+    if (cmd == 9) { // 'Key' pressed: attack begins
+        bActive = true;
+        adsr.start();
+        index = 0;
+        phas = 0.0f;
+        increment = ((f0 / SamplingRate) * tbl.size());
+        A = vel / 127.0f;
+        
+        // Cargar la tabla desde un fichero externo
+        std::ifstream file("sine_table.dat");
+        if (file.is_open()) {
+            for (int i = 0; i < tbl.size(); ++i) {
+                file >> tbl[i];
+            }
+            file.close();
+        } else {
+            std::cerr << "Error: no se pudo abrir el archivo sine_table.dat" << std::endl;
+        }
+    } else if (cmd == 8) { // 'Key' released: sustain ends, release begins
+        adsr.stop();
+    } else if (cmd == 0) { // Sound extinguished without waiting for release to end
+        adsr.end();
+    }
+}
+```  
 
 ### Efectos sonoros.
 
