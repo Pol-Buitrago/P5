@@ -42,14 +42,19 @@ note_data = audio_data[note_start_sample:note_end_sample]
 
 attack_data = note_data[:attack_samples]
 decay_data = note_data[attack_samples:attack_samples + decay_samples]
-sustain_data = note_data[attack_samples + decay_samples:attack_samples + decay_samples + sustain_samples]
+sustain_data = note_data[attack_samples +
+                         decay_samples:attack_samples + decay_samples + sustain_samples]
 release_data = note_data[-release_samples:]
 
 # Graficar la envolvente ADSR
-plt.plot(time_axis[note_start_sample:note_start_sample + attack_samples], attack_data, color='tab:red', label='Attack', linewidth=0.8)
-plt.plot(time_axis[note_start_sample + attack_samples:note_start_sample + attack_samples + decay_samples], decay_data, color='tab:orange', label='Decay', linewidth=0.8)
-plt.plot(time_axis[note_start_sample + attack_samples + decay_samples:note_end_sample - release_samples], sustain_data, color='tab:green', label='Sustain', linewidth=0.8)
-plt.plot(time_axis[note_end_sample - release_samples:note_end_sample], release_data, color='tab:purple', label='Release', linewidth=0.8)
+plt.plot(time_axis[note_start_sample:note_start_sample + attack_samples],
+         attack_data, color='tab:red', label='Attack', linewidth=0.8)
+plt.plot(time_axis[note_start_sample + attack_samples:note_start_sample + attack_samples +
+         decay_samples], decay_data, color='tab:orange', label='Decay', linewidth=0.8)
+plt.plot(time_axis[note_start_sample + attack_samples + decay_samples:note_end_sample -
+         release_samples], sustain_data, color='tab:green', label='Sustain', linewidth=0.8)
+plt.plot(time_axis[note_end_sample - release_samples:note_end_sample],
+         release_data, color='tab:purple', label='Release', linewidth=0.8)
 
 # Detalles de la gráfica
 plt.title("ADSR Envelope for a Single Note")

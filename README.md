@@ -102,6 +102,7 @@ mediante búsqueda de los valores en una tabla.
 
   ![gráfico de muestras de la tabla vs señal construido](img/tblVsX.png)
 
+*Ten en cuenta que las muestras en azul también lo están en rojo, solo que se prioriza el azul para poder visualizar las muestras de dicho señal construido.*
 
 - Si ha implementado la síntesis por tabla almacenada en fichero externo, incluya a continuación el código
   del método `command()`.
