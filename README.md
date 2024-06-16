@@ -33,6 +33,18 @@ permitan visualizar el funcionamiento de la curva ADSR.
   - *Podemos observar una ADSR genérica, con un ataque del 10% de duración, una caída del 20%, un mantenimiento del 50% y una liberación final del 20%.* 
 
   ![gráfica de una ADSR genérica](img/ADSR_generica.png)
+  
+  - A continuación, se muestra un ejemplo específico utilizando el instrumento `seno` y la primera nota "do" del archivo `doremi.sco`. El archivo de audio resultante se llama `seno.wav`. El comando utilizado para generar el archivo de audio es:
+
+    ```sh
+    synth seno.orc doremi.sco seno.wav
+    ```
+
+    La gráfica a continuación ilustra las fases de Ataque (A), Decaimiento (D), Mantenimiento (S) y Liberación (R) de la señal de audio generada:
+
+    ![ADSR Curve](img/ADSR_doremi_seno.png)
+
+    En esta gráfica, podemos observar claramente cómo la envolvente ADSR se aplica a una nota específica del instrumento `seno`.
 
 * Un instrumento *percusivo*, como una guitarra o un piano, en el que el sonido tenga un ataque rápido, no
   haya mantenimiemto y el sonido se apague lentamente.

@@ -12,6 +12,7 @@ sources = [
 	'effects/tremolo.cpp',
 	'effects/vibrato.cpp',
 	'instruments/seno.cpp',
+	'instruments/percussive.cpp',
 ]
 
 executable(
