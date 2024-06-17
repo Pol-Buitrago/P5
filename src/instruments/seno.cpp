@@ -36,6 +36,14 @@ InstrumentSeno::InstrumentSeno(const std::string &param)
     Interpolation = true;
   }
 
+  /*we can also implemented seno instrument to be percussive (with exponential final decay)*/
+  if (kv("percussive") != "false")
+    percussive = false; // default value
+  else
+  {
+    percussive = true;
+  }
+
   // Create a tbl with one period of a sinusoidal wave
   tbl.resize(N);
   float phase = 0, step = 2 * M_PI / (float)N;
@@ -64,6 +72,7 @@ void InstrumentSeno::command(long cmd, long note, long vel)
   else if (cmd == 8)
   { //'Key' released: sustain ends, release begins
     adsr.stop();
+    end_hit = true;
   }
   else if (cmd == 0)
   { // Sound extinguished without waiting for release to end
@@ -99,13 +108,30 @@ const vector<float> &InstrumentSeno::synthesize()
   for (unsigned int i = 0; i < x.size(); ++i)
   {
     phas += increment;
-    if (std::floor(phas) == phas || !Interpolation)
+    /*if percussive == true and note end has been hit*/
+    if (percussive && end_hit)
     {
-      x[i] = A * tbl[round(phas)];
+      if (std::floor(phas) == phas || !Interpolation)
+      {
+        x[i] = A * tbl[round(phas)] * pow(0.99935, (int)interrupted_index);
+        interrupted_index++;
+      }
+      else // phas is a non intger, we must interpolate
+      {
+        x[i] = A * getInterpolatedValue(phas) * pow(0.99935, (int)interrupted_index);
+        interrupted_index++;
+      }
     }
-    else // phas is a non intger, we must interpolate
+    else
     {
-      x[i] = A * getInterpolatedValue(phas);
+      if (std::floor(phas) == phas || !Interpolation)
+      {
+        x[i] = A * tbl[round(phas)];
+      }
+      else // phas is a non intger, we must interpolate
+      {
+        x[i] = A * getInterpolatedValue(phas);
+      }
     }
     while (phas >= tbl.size())
       phas = phas - tbl.size();

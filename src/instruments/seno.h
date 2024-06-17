@@ -11,11 +11,11 @@ namespace upc
     class InstrumentSeno : public Instrument
     {
         EnvelopeADSR adsr;
-        unsigned int index;
+        unsigned int index, interrupted_index = 0; // last member is for percussive type
         float A;
         std::vector<float> tbl;
         float f0, increment, phas;
-        bool Interpolation;
+        bool Interpolation, percussive, end_hit = false; // last 2 bools are for percussive type
 
     public:
         InstrumentSeno(const std::string &param = "");
