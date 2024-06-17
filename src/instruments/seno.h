@@ -15,6 +15,7 @@ namespace upc
         float A;
         std::vector<float> tbl;
         float f0, increment, phas;
+        bool Interpolation;
 
     public:
         InstrumentSeno(const std::string &param = "");

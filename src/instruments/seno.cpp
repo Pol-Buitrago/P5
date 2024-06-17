@@ -29,9 +29,12 @@ InstrumentSeno::InstrumentSeno(const std::string &param)
     - 1 == interpolation (first_value + second_value)/2
   */
 
-  int interpolation;
-  if (!kv.to_int("I", interpolation))
-    interpolation = 0; // default value
+  if (kv("I") != "True")
+    Interpolation = false; // default value
+  else
+  {
+    Interpolation = true;
+  }
 
   // Create a tbl with one period of a sinusoidal wave
   tbl.resize(N);
@@ -96,7 +99,7 @@ const vector<float> &InstrumentSeno::synthesize()
   for (unsigned int i = 0; i < x.size(); ++i)
   {
     phas += increment;
-    if (std::floor(phas) == phas)
+    if (std::floor(phas) == phas || !Interpolation)
     {
       x[i] = A * tbl[round(phas)];
     }

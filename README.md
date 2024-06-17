@@ -86,9 +86,7 @@ mediante búsqueda de los valores en una tabla.
 ```cpp
 
 ```
-- Explique qué método se ha seguido para asignar un valor a la señal a partir de los contenidos en la tabla,
-  e incluya una gráfica en la que se vean claramente (use pelotitas en lugar de líneas) los valores de la
-  tabla y los de la señal generada.
+- Explique qué método se ha seguido para asignar un valor a la señal a partir de los contenidos en la tabla, e incluya una gráfica en la que se vean claramente (use pelotitas en lugar de líneas) los valores de la tabla y los de la señal generada.
 
   *Como se ve en el for() del constructor de la clase **InstrumentSeno**, la tabla se construye en base a un periodo entero de una señal senoidal como cualquier otra, en incrementos que van en función del número de muestras que deseamos tener dentro de la tabla, es decir, como más puntos almacenemos, más pequeños serán los incrementos y por lo tanto tendremos el equivalente de un periodo de senoide almacenado en la tabla muestreado con frecuencia de muestreo más alta.*
 
@@ -106,15 +104,41 @@ mediante búsqueda de los valores en una tabla.
 
   *Gracias a esta variable, cuando llamemos al método **synthesize()**, podremos recorrer la tabla a la velocidad deseada. Por ejemplo, si nuestra tabla almacena 40 valores (valor default de N (tamaño de `tbl`)) para recorrer la tabla a velocidad de muestra a muestra (sin saltarnos ninguna, que en teoría podría entenderse como la velocidad más baja, aunque también sería posible ir 1/2 o 1/4 o menos de muestras/tick) nuestra frecuencia fundamental `f0` debe ser un 1/40 de la frecuencia de muestreo (declarada como `SamplingRate` en el código) que equivale a 44100 Hz.*
 
+  *En este caso, el señal base reproducido por el instrumento Seno sería idéntico al señal almacenado en `tbl[n]`. A continuación graficamos en rojo el señal `tbl[n]` junto con la reproducción del instrumento Seno cuando se cumplen dichas condiciones de `f0`. Se ha sumado 1 al señal `x[n]` para que pudiera distinguirse del señal base `tbl[n]`:*
+
+  ![visualización señal base tbl[n] con x[n] cuando f0 = Fs/40](img/SR:40_noInterpolation.png)
+
+  *De hecho esta perfecta alineación entre los señales se producirá siempre que `f0` sea la N-ésima parte de la frecuencia de muestreo `SamplingRate`, donde N es el tamaño de la tabla.*
+
   *Si quisiéramos recorrer la tabla a mayor velocidad y por lo tanto saltarnos muestras, como por ejemplo, ir de 2 en 2 muestras (el doble del caso anterior), debemos fijar `f0` al doble, por lo tanto a un 1/20 del `SamplingRate`. En este caso, el señal obtenido en base a la tabla `tbl` se construiria de la siguiente forma (si x[n] es el señal del instrumento y tbl[n] es la tabla donde se contienen los valores por defecto):*
 
   *x[0] = tbl[1], x[1] = tbl[3], x[2] = tbl[5] ...*
 
-  *A continuación mostramos un gráfico donde se puede visualizar sobreimpuestos uno encima del otro, en pelotitas rojas, las muestras contenidas en la tabla `tbl[n]` y en pelotitas azules los muestras finales del señal construido, en el caso de f0 = 2 * SamplingRate:*
+  *A continuación mostramos un gráfico donde se puede visualizar de forma semejante al anterior gráfica, la diferencia entre las 2 señales, donde a `x[n]` se le ha sumado 1 para que pueda diferenciarse mejor de la otra señal. Hemos de tener en cuenta que aunque parezca que ambas señales estén durando lo mismo, cuando se vaya a realizar la orquestración, la reproducción de un instrumento se realiza a base de ticks/segundo y como `x[n]` ahora tiene menos puntos por periodo que la `x[n]` del apartado anterior (la mitad exactamente), ésta se reproduciría el doble de rápido y así es como aconseguiríamos la percepción de una `f0` distinta:*
 
-  ![gráfico de muestras de la tabla vs señal construido](img/tblVsX.png)
+  ![gráfico de muestras de la tabla vs señal construido](img/SR:20_noInterpolation.png)
 
-*Ten en cuenta que las muestras en azul también lo están en rojo, solo que se prioriza el azul para poder visualizar las muestras de dicho señal construido.*
+*Hasta ahora la recogida de valores desde `tbl[n]` se ha heco de forma exacta, es decir, no hay ambiguedad sobre que valores de la tabla escoger, ya que los incrementos eran enteros (en el primer caso de f0 = SamplingRate/40, el incremento era de 1 en 1 mientras que en el segundo caso el incremento era el doble, 2). También nos gustaría enseñar lo que sucedería cuando dichos incrementos no son tan perfectos, y nos encontramos en la situación de tener que coger valores de la tabla intermedios, por ejemplo, si incremento = 1.5, los valores a los que accederíamos en `tbl[n]` serian `tbl[0], tbl[1.5], tbl[3], tbl[4.5]...`. Se han implementado 2 soluciones para redimirlo:*
+
+* *Aproximación del índice decimal al entero más próximo e.g. 4.5 -> 5 o 3.4 = 3. Llamámosle el caso **1**.*
+
+* *Interpolación Ponderada (Weighed Interpolation) e.g. si el índice = 4.7, interpolamos entre las muestras del índice 4 y 5 pero tal que 70% de la contribución proviene del índice 5 y el 30% de la contribución proviene de índice 4. Llamámosle el caso **2**.*
+
+*En cuanto el **caso 1**, este procedimiento se realiza con la ejecución de:*
+
+```cpp
+x[i] = A * tbl[round(phas)];
+```
+*Este método de resolución de índices puede ser problemática cuando se desee reproducir un señal con alta fidelidad y reducir las distorsiones incorporadas por dicha aproximación. Ocurrirá distorsión siempre que la `f0` que se esté emulando no sea un múltiplo exacto de 44100/N donde N es el tamaño de `tbl[n]`. En nuestro caso, N=40 y por lo tanto cualquier nota músical cuya equivalente `f0` no sea un múltiplo entero de 1102,5 Hz tendrá distorsión. Veamos un ejemplo donde usamos 2 notas músicales relativamente próximas en cuanto a la `f0` y observemos como realmente hay presencia de distorsión.*
+
+*Vamos a visualizar las "diferentes" formas de onda producidas por el instrumento Seno cuando queremos emular la nota `69` (`f0 = 440 Hz`) y luego la nota `73` (`f0 = 554 Hz`):*
+
+*Antes dijimos que para que el Seno cogiese todos los valores de la tabla (N=40), la `f0` de su nota tenia que ser 44100/40 = 1102.5 Hz. La nota 69 tiene un `f0` de 440 Hz, por lo tanto deberemos recorrer `tbl[n]` a mucha menor velocidad y tendremos que "inventarnos" valores en medio de otros dentro de la tabla. Aproximadamente, tendremos que "inventarnos" unos 2-3 muestras entre índices de la tabla sucesivos (1/40 / 440/44100). Si graficamos junto este señal otro con una `f0` parecida pero algo distinta, como por ejemplo la nota 73 cuyo `f0` equivale a unos 554 Hz, recorreremos la tabla un poco más rápida pero, lo importante de entender de este análisis, es el hecho que este método de aproximación del índice supone distorsión aparente ya que muestras sucesivas deben repetirse entre sí (básicamente cuando se usan frecuencias por debajo de los comentados 1102,5 Hz). Esto no es un efecto que se produce cuando se usan frecuencias fundamentales superiores a dicho valor, aunque siempre que no implementemos un método de interpolación inteligente, siempre estaremos limitados a los valores proporcionados por la tabla inicial. Más de esto después de la gráfica:*
+
+![gráfica de tbl[n] vs 2 señales de 2 notas distintas, sin interpolación](img/Note69vs73.png)
+*Notar que x[n] es la senoide de la nota 69 mientras que y[n] es de la nota 73.*
+
+
 
 - Si ha implementado la síntesis por tabla almacenada en fichero externo, incluya a continuación el código
   del método `command()`.
