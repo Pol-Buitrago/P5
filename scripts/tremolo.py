@@ -7,7 +7,7 @@ from scipy.io import wavfile
 plt.rcParams['figure.figsize'] = [10, 6]  # Ancho x Alto en pulgadas
 
 # Ruta del archivo de audio
-file_path = os.path.join('work', 'seno_tremolo.wav')
+file_path = os.path.join('work', 'file.wav')
 
 # Cargar archivo de audio y frecuencia de muestreo
 sampling_rate, audio_data = wavfile.read(file_path)

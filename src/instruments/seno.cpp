@@ -29,7 +29,7 @@ InstrumentSeno::InstrumentSeno(const std::string &param)
     - 1 == interpolation (first_value + second_value)/2
   */
 
-  if (kv("I") != "True")
+  if (kv("I") != "false")
     Interpolation = false; // default value
   else
   {

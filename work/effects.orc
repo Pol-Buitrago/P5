@@ -1,1 +1,1 @@
-13	Tremolo	fm=10; A=0.10;
+13	Tremolo	fm=10; A=0.15;
