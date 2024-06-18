@@ -8,7 +8,7 @@ from scipy.signal import hilbert
 plt.rcParams['figure.figsize'] = [10, 6]  # Ancho x Alto en pulgadas
 
 # Ruta del archivo de audio
-file_path = os.path.join('work', 'file.wav')
+file_path = os.path.join('work', 'seno_tremolo_agresivo.wav')
 
 # Cargar archivo de audio y frecuencia de muestreo
 sampling_rate, audio_data = wavfile.read(file_path)
@@ -33,27 +33,34 @@ fin_muestra = int(fin_segunda_nota * sampling_rate)
 audio_data_segunda_nota = audio_data[inicio_muestra:fin_muestra]
 
 # Generar eje de tiempo en segundos para la segunda nota
-time_axis_segunda_nota = np.linspace(inicio_segunda_nota, fin_segunda_nota, fin_muestra - inicio_muestra)
+time_axis_segunda_nota = np.linspace(
+    inicio_segunda_nota, fin_segunda_nota, fin_muestra - inicio_muestra)
 
 # Calcular la envolvente analítica
 analytic_signal = hilbert(audio_data_segunda_nota)
 amplitude_envelope = np.abs(analytic_signal)
 
 # Función para suavizar la envolvente usando un filtro de media móvil
+
+
 def smooth(data, window_len=100):
     window = np.ones(window_len) / window_len
     return np.convolve(data, window, mode='same')
+
 
 # Suavizar las envolventes
 smoothed_envelope = smooth(amplitude_envelope)
 
 # Graficar la segunda nota y sus envolventes suavizadas
-plt.plot(time_axis_segunda_nota, audio_data_segunda_nota, color='tab:blue', label='Note "Re"', linewidth=0.8)
-plt.plot(time_axis_segunda_nota, smoothed_envelope, color='tab:orange', linestyle='--', label='Upper Envelope', linewidth=2)
-plt.plot(time_axis_segunda_nota, -smoothed_envelope, color='tab:green', linestyle='--', label='Lower Envelope', linewidth=2)
+plt.plot(time_axis_segunda_nota, audio_data_segunda_nota,
+         color='tab:blue', label='Note "Re"', linewidth=0.8)
+plt.plot(time_axis_segunda_nota, smoothed_envelope, color='tab:orange',
+         linestyle='--', label='Upper Envelope', linewidth=2)
+plt.plot(time_axis_segunda_nota, -smoothed_envelope, color='tab:green',
+         linestyle='--', label='Lower Envelope', linewidth=2)
 
 # Detalles de la gráfica
-plt.title("Second Note (Re) with Smoothed Upper and Lower Envelopes")
+plt.title("Re Con Trémolo Agresivo (A=150% & fm=10Hz)")
 plt.xlabel("Time (s)")
 plt.ylabel("Amplitude")
 plt.legend()

@@ -175,10 +175,77 @@ void InstrumentSeno::command(long cmd, long note, long vel) {
 
 ### Efectos sonoros.
 
-- Incluya dos gráficas en las que se vean, claramente, el efecto del trémolo y el vibrato sobre una señal
-  sinusoidal. Deberá explicar detalladamente cómo se manifiestan los parámetros del efecto (frecuencia e
-  índice de modulación) en la señal generada (se valorará que la explicación esté contenida en las propias
-  gráficas, sin necesidad de *literatura*).
+- Incluya dos gráficas en las que se vean, claramente, el efecto del trémolo y el vibrato sobre una señal sinusoidal. Deberá explicar detalladamente cómo se manifiestan los parámetros del efecto (frecuencia e índice de modulación) en la señal generada (se valorará que la explicación esté contenida en las propias gráficas, sin necesidad de *literatura*).
+
+## *Trémolo*
+
+*Para la demostración del efecto del trémolo vamos a hacer una comparativa entre la aplicación de dicho efecto con unos parámetros más "normales" o cómodos (A=0.15 y fm=10Hz) y otra con parámetros más "agresivos" (A=1.5 y fm=10Hz). A continuacíon enseñamos el proceso de obtención de una nota bajo el efecto del trémolo y su clara apariencia en la representación gráifca del señal. Empezemos por el trémolo con parámetros "normales":*
+
+*Primero se partió de los siguientes ficheros para generar el `.wav` de donde extraeríamos la señal a analizar:*
+
+***doremi.sco***
+
+```shell
+#Time; On (8)/Off (9); Channel; Note; Velocity;
+#Time; Control; Channel; Effect; On/Off;
+0	9	1	60	100
+120	8	1	60	100
+0   12  1   13  1 #trémolo inicio
+40	9	1	62	100
+120	8	1	62	100
+40	9	1	64	100
+120	8	1	64	100
+40	9	1	65	100
+120	8	1	65	100
+40	9	1	67	100
+120	8	1	67	100
+40	9	1	69	100
+120	8	1	69	100
+40	9	1	71	100
+0   12  1   13  0 #trémolo final
+120	8	1	71	100
+40	9	1	72	100
+120	8	1	72	100
+40	0	1	0	0
+```
+
+***effects.orc***
+
+```shell
+13	Tremolo	fm=10; A=0.15;
+```
+
+***seno.orc***
+
+```shell
+1	InstrumentSeno	ADSR_A=0.02; ADSR_D=0.1; ADSR_S=0.4; ADSR_R=0.1; N=40; I=false; percussive=false; 
+```
+
+*Luego ejecutamos el programa `synth` de la siguiente manera (ubicandonos dentro de `work/`) que dió lugar al fichero de sonido `seno_tremolo_norma.wav` (todos los ficheros de sonidos realizados a lo largo de la práctica estan presentes en el mismo directorio de `work/` por si al lector le apetece):*
+
+```shell
+synth -e effects.orc seno.orc doremi.sco seno_tremolo_normal.wav
+```
+
+*A partir de este fichero de audio, podemos extraer la siguientes gráficas del señal contenido en él:*
+
+<small>imagen del doremi con tremolo aplicado en notas intermedias</small>
+*Gráfica del do-re-mi con el efecto trémolo (normal) aplicado sobre él:*
+
+![dgfd](img/seno_tremolo_normalA0,15F10_noInterpolation.png)
+
+*Imagen generada a partir del código Python en `scripts/tremolo.py`*
+
+<small>imagen de Re ampliado con tremolo</small>
+![dfgdfg](img/seno_tremolo_A0,15F10_noInterpolation_oneNote.png)
+
+*Imagen generada a partir del código Python en `scripts/tremolo2.py`*
+
+<small>imagen Re ultra ampliado</small>
+![dsgd](img/)
+
+*Imagen generada a partir del código Python en `scripts/tremolo3.py`*
+
 - Si ha generado algún efecto por su cuenta, explique en qué consiste, cómo lo ha implementado y qué
   resultado ha producido. Incluya, en el directorio `work/ejemplos`, los ficheros necesarios para apreciar
   el efecto, e indique, a continuación, la orden necesaria para generar los ficheros de audio usando el
