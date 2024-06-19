@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.io import wavfile
 
 # Configuración para el tamaño del gráfico
-plt.rcParams['figure.figsize'] = [10, 6]  # Ancho x Alto en pulgadas
+plt.rcParams['figure.figsize'] = [10, 20]  # Ancho x Alto en pulgadas
 
 # Ruta de los archivos de audio
 file_path_normal = os.path.join('work', 'seno.wav')
