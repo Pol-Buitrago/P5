@@ -229,23 +229,108 @@ synth -e effects.orc seno.orc doremi.sco seno_tremolo_normal.wav
 
 *A partir de este fichero de audio, podemos extraer la siguientes gráficas del señal contenido en él:*
 
-<small>imagen del doremi con tremolo aplicado en notas intermedias</small>
 *Gráfica del do-re-mi con el efecto trémolo (normal) aplicado sobre él:*
 
-![dgfd](img/seno_tremolo_normalA0,15F10_noInterpolation.png)
+![Gráfica del do-re-mi con el efecto trémolo (normal)](img/seno_tremolo_normal_noInterpolation.png)
 
 *Imagen generada a partir del código Python en `scripts/tremolo.py`*
 
-<small>imagen de Re ampliado con tremolo</small>
-![dfgdfg](img/seno_tremolo_A0,15F10_noInterpolation_oneNote.png)
+*Gráfica de la nota Re ampliada destacando zona de aplicación de un período de Trémolo:*
 
-*Imagen generada a partir del código Python en `scripts/tremolo2.py`*
-
-<small>imagen Re ultra ampliado</small>
-![dsgd](img/)
+![Gráfica de la nota Re ampliada](img/seno_tremolo_normal_noInterpolation_zoom.png)
 
 *Imagen generada a partir del código Python en `scripts/tremolo3.py`*
 
+*El fichero de audio de salida (`.wav`) del do-re-mi con éste trémolo de baja potencia aplicado se halla, como todos los ficheros de audio, en el directorio `work/` y se llama **seno_tremolo_normala.wav**.*
+
+*Ahora pasamos a aplicar un efecto del tremolo aún más fuerte. Para cambiar las propidades del efecto, basta con modificar el fichero `work/effects.orc`, que ahora cogerá la siguiente forma:*
+
+```shell
+13  Tremolo	fm=10; A=1.5;
+```
+
+*Es decir, aumentamos la amplitud de modulación a un 150%, cosa que debería reflejarse como una variación mucha más brusca de la amplitud de las notas de la orquestración. Vamos a verlo ejecutando el comando `synth` enseñado anteriormente con exactamente la misma estructura, solo que ahora cambiamos el fichero de audio de salida por uno llamado `seno_tremolo_agresivo.wav`.*
+
+```shell
+synth -e effects.orc seno.orc doremi.sco seno_tremolo_agresivo.wav
+```
+
+*Procedemos a analizar el señal con cada vez más detalle. Aquí tenemos la gráfica de la orquestación do-re-mi con efecto tremolo "agresivo" aplicado:*
+
+![DoReMi con Tremolo Agresivo](img/seno_tremolo_agresivo_noInterpolation.png)
+
+*Miramos que está ocurriendo en esas notas intermedias de la orquestación (donde el efecto se está aplicando):*
+
+![Nota Re Bajo Efecto Del Tremolo Agresivo](img/seno_tremolo_agresivo_noInterpolation_oneNote.png)
+
+
+*Si miramos aún un poco más cerca, igual como hicimos con el efecto anterior del tremolo "normal":*
+
+![Ampliación Nota Re Bajo Efecto Del Tremolo Agresivo](img/seno_tremolo_agresivo_noInterpolation_zoom.png)
+
+
+*Podemos apreciar como el tremolo, aplicado con parámetros más "extravagantes", realmente da lugar a transformaciones del señal interesantes y que pueden ser útiles a la hora de sintetizar sonidos únicos. También destacar la información de alta calidad que nos proporciona la leyenda de esta imagen. Si tenemos en cuenta que el tremolo aplicado ha sido uno con frecuencia de modulación 10 Hz, tiene sentido que un periodo de modulación de la amplitud dure 100 ms (una décima de un segundo) como se ha podido comprobar también de forma empírica, donde el primer máximo se encuenra al instante 0,89 segundos y el siguiente más próximo a 0,99 segundos.*
+
+## *Vibrato*
+
+*Ahora procedemos con el análisis del efecto vibrato. Para hacer un contraste de las distintas posibilidades de este efecto, igual que con el Tremolo, hemos diseñado 2 orquestaciones, uno con la aplicación de un vibrato "leve" o "normal" (I=0.5 y fm=10Hz) y otro con un vibrato más "fuerte" o "agresivo" (I=24 y fm=200Hz). También hacer mención, antes de entrar más a detalle, que este efecto, a diferencia del Tremolo, supone una variación de la velocidad con la que se recorre la tabla de muestras sonoros (el seno) y por lo tanto puede aplicarse con y sin interpolación. Acabaremos esta explicación con una aplicación del vibrato con interpolación y así poder ver las diferencias entre hacer o no hacer dicha interpolación (estos 2 primers casos no tendrán interpolación):*
+
+### *Vibrato Normal*
+
+*Para la generación de una orquesta con efecto de vibrato normal (I=0.5 y fm=10Hz) hemos modificado los siguientes ficheros:*
+
+***effects.orc***
+
+*Hemos añadido la siguiente línea de metadatos:*
+
+```shell
+14  Vibrato I=0.5; fm=10;
+```
+
+***doremi.sco***
+
+```shell
+#Time; On (8)/Off (9); Channel; Note; Velocity;
+#Time; Control; Channel; Effect; On/Off;
+0	9	1	60	100
+120	8	1	60	100
+0   12  1   14  1 #vibrato inicio
+40	9	1	62	100
+120	8	1	62	100
+40	9	1	64	100
+120	8	1	64	100
+40	9	1	65	100
+120	8	1	65	100
+40	9	1	67	100
+120	8	1	67	100
+40	9	1	69	100
+120	8	1	69	100
+40	9	1	71	100
+0   12  1   14  0 #vibrato final
+120	8	1	71	100
+40	9	1	72	100
+120	8	1	72	100
+40	0	1	0	0
+```
+
+*Luego ejecutamos el programa **synth** como siempre:*
+
+```shell
+synth -e effects.orc seno.orc doremi.sco seno_vibrato_normal.wav
+```
+
+*A simple vista las señales de la orquestación parecen no tener ningua perturbación o efecto aplicado, pero si miramos al espectro frecuencial, nos vamos a dar cuenta de muchas curiosidades que dan explicación de porqué suena como suena esta grabación con vibrato.*
+
+![Graficas de comparación Waveform Normal vs Waveform + Vibrato](img/seno_vibrato_normal_AllNotes.png)
+
+*Si miramos fijadamente, solo la primera y las 2 últimas notas permanecen puras, es decir, no presencian el efecto del vibrato. Esto es fácilmente explicado por el `doremi.sco` que hemos usado, donde podemos ver que solo aplicamos el vibrato a un conjunto intermedio de notas. En cuanto a estas notas que sí tienen perturbación, podemos ver que las representaciones temporales no son muy efectivas para ver los efectos de dicha perturbación. Por eso hemos empleado el uso de la transformada de Fourier, cuya representación sí nos da una mucha mejor visualización de la perturbación provocada por el efecto del vibrato.*
+
+*La primera fila supone la pareja (señal temporal sin tremolo, FFT de dicho señal) mientras que la segunda está diseñada para que haga de contraste con la anterior, donde podemos ver que frecuencialmente existe bastante perturbación. Las demas filas que siguen sirven para ver la peturbación aplicada a cada nota, donde ya deja de existir un afinado y bien definido pico frecuencial (como debería ser según la teoría) sino que existe energía en las frecuencias justo vecinas de ese mismo pico, contaminándola frecuencialmente.*
+
+**
+### *Vibrato Agresivo*
+
+### *Vibrato Normal + Interpolado*
 - Si ha generado algún efecto por su cuenta, explique en qué consiste, cómo lo ha implementado y qué
   resultado ha producido. Incluya, en el directorio `work/ejemplos`, los ficheros necesarios para apreciar
   el efecto, e indique, a continuación, la orden necesaria para generar los ficheros de audio usando el

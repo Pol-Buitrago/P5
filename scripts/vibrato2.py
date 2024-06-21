@@ -11,6 +11,8 @@ file_path_normal = os.path.join('work', 'seno.wav')
 file_path_vibrato = os.path.join('work', 'seno_vibrato_normal.wav')
 
 # Función para calcular y graficar la FFT limitada hasta 2.5 kHz
+
+
 def plot_fft_comparison(file_path, subplot_index, title):
     # Cargar archivo de audio y frecuencia de muestreo
     sampling_rate, audio_data = wavfile.read(file_path)
@@ -42,13 +44,16 @@ def plot_fft_comparison(file_path, subplot_index, title):
 
     # Gráfico de la FFT (espectro de frecuencia)
     plt.subplot(10, 2, subplot_index + 1)
-    plt.plot(fft_freqs[:max_visible_index], fft_abs[:max_visible_index], color='r')
+    plt.plot(fft_freqs[:max_visible_index],
+             fft_abs[:max_visible_index], color='r')
     plt.title(f'{title} FFT (Frequency Spectrum)')
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude')
     plt.xlim(0, max_freq_limit)  # Limitar el rango de frecuencias mostradas
 
 # Función para graficar la FFT de una nota específica del caso vibrato
+
+
 def plot_individual_note_fft(file_path_vibrato, subplot_index, note_name):
     # Cargar archivo de audio y frecuencia de muestreo
     sampling_rate, audio_data = wavfile.read(file_path_vibrato)
@@ -61,7 +66,8 @@ def plot_individual_note_fft(file_path_vibrato, subplot_index, note_name):
     note_duration = total_time / 8
 
     # Definir los tiempos de inicio y fin para la nota específica
-    note_index = ['do', 're', 'mi', 'fa', 'sol', 'la', 'si', 'do'].index(note_name)
+    note_index = ['do (Low)', 're', 'mi', 'fa', 'sol',
+                  'la', 'si', 'do (High)'].index(note_name)
     start_time = note_duration * note_index
     end_time = start_time + note_duration
 
@@ -95,11 +101,13 @@ def plot_individual_note_fft(file_path_vibrato, subplot_index, note_name):
 
     # Gráfico de la FFT (espectro de frecuencia) de la nota específica
     plt.subplot(10, 2, subplot_index + 1)
-    plt.plot(fft_freqs_note[:max_visible_index], fft_abs_note[:max_visible_index], color='m')
+    plt.plot(fft_freqs_note[:max_visible_index],
+             fft_abs_note[:max_visible_index], color='m')
     plt.title(f'Vibrato "{note_name.capitalize()}" FFT (Frequency Spectrum)')
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude')
     plt.xlim(0, max_freq_limit)  # Limitar el rango de frecuencias mostradas
+
 
 # Graficar ambas señales y sus FFT, incluyendo las 8 notas del caso vibrato
 plt.figure()
@@ -111,7 +119,7 @@ plot_fft_comparison(file_path_normal, 1, 'Normal')
 plot_fft_comparison(file_path_vibrato, 3, 'Vibrato')
 
 # Graficar las notas individuales del caso vibrato
-notes = ['do', 're', 'mi', 'fa', 'sol', 'la', 'si', 'do']
+notes = ['do (Low)', 're', 'mi', 'fa', 'sol', 'la', 'si', 'do (High)']
 for i, note in enumerate(notes):
     plot_individual_note_fft(file_path_vibrato, 5 + 2 * i, note)
 
