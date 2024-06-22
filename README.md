@@ -629,14 +629,13 @@ synth -e work/effects.orc work/seno.orc work/doremi.sco work/audio_con_fuzz.wav
 
 ### Síntesis FM.
 
-Construya un instrumento de síntesis FM, según las explicaciones contenidas en el enunciado y el artículo
-de [John M. Chowning](https://web.eecs.umich.edu/~fessler/course/100/misc/chowning-73-tso.pdf). El instrumento usará como parámetros **básicos** los números `N1` y `N2`, y el índice de modulación `I`, que deberá venir expresado en semitonos.
+- Construya un instrumento de síntesis FM, según las explicaciones contenidas en el enunciado y el artículo de [John M. Chowning](https://web.eecs.umich.edu/~fessler/course/100/misc/chowning-73-tso.pdf). El instrumento usará como parámetros **básicos** los números `N1` y `N2`, y el índice de modulación `I`, que deberá venir expresado en semitonos.
 
 *Para construir un instrumento de síntesis FM según las especificaciones dadas, vamos a seguir el enfoque basado en la fórmula de frecuencia modulada (FM) propuesta por John M. Chowning. Utilizaremos los parámetros básicos `N1`, `N2` e `I` (índice de modulación expresado en semitonos) para generar varios tipos de sonidos, incluyendo un vibrato y sonidos tipo clarinete y campana. Además, generaremos escalas diatónicas con estos sonidos y guardaremos los resultados en archivos de audio.*
 
 - Use el instrumento para generar un vibrato de *parámetros razonables* e incluya una gráfica en la que se vea, claramente, la correspondencia entre los valores `N1`, `N2` e `I` con la señal obtenida.
 
-### Implementación del Instrumento de Síntesis FM
+### Implementación del Vibrato con Síntesis FM
 
 ## Fórmula de Síntesis FM
 
@@ -654,17 +653,38 @@ Donde:
 - SamplingRate es la frecuencia de muestreo.
 
 
-#### Implementación en C++
+## Implementación en C++
+
+*Para la implementación del instrumento de síntesis FM, se ha tenido que implementar de nuevo los 3 métodos que definen a un instrumento cualquiera, igual como hicimos con los instrumentos anteriores:*
+
+***Constructor SenoFM()***
 
 ```cpp
-...
+AFEGIR CODI CONSTRUCTOR
+```
+
+***Command()***
+```cpp
+AFEGIR CODI COMMAND()
+```
+
+***Synthesize()***
+
+```cpp
+AFEGIR CODI SYNTHESIZE()
 ```
 
 - Use el instrumento para generar un sonido tipo clarinete y otro tipo campana. Tome los parámetros del sonido (N1, N2 e I) y de la envolvente ADSR del citado artículo. Con estos sonidos, genere sendas escalas diatónicas (fichero `doremi.sco`) y ponga el resultado en los ficheros `work/doremi/clarinete.wav` y `work/doremi/campana.work`.
 
 ### Generación de Sonidos y Escalas Diatónicas
 
-Para generar el vibrato y los sonidos tipo clarinete y campana, utilizaremos los parámetros especificados en el artículo de Chowning para cada tipo de sonido, incluyendo las envolventes ADSR adecuadas.
+Para generar los sonidos tipo clarinete y campana, utilizaremos los parámetros especificados en el artículo de Chowning para cada tipo de sonido, incluyendo las envolventes ADSR adecuadas.
+
+#### Generacíon Clarinete
+
+
+
+#### Generación Campana
 
 ### Archivos de Escalas Diatónicas
 
