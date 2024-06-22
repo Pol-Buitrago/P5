@@ -1,38 +1,74 @@
+
+#include <iostream>
+#include <math.h>
 #include "senoFM.h"
 #include "keyvalue.h"
-#include <cmath>    // Para funciones matemáticas como sin(), pow()
-#include <iostream> // Para la salida estándar, si es necesario
+#include "wavfile_mono.h"
+
+#include <stdlib.h>
 
 using namespace upc;
 using namespace std;
 
 SenoFM::SenoFM(const std::string &param)
-    : adsr(SamplingRate), adsr2(SamplingRate),
-      adsr_a(0.0f), adsr_d(0.0f), adsr_s(0.0f), adsr_r(0.0f),
-      adsr_a2(0.0f), adsr_d2(0.0f), adsr_s2(0.0f), adsr_r2(0.0f),
-      index_step(0.0f), index_sen(0.0f)
+    : adsr(SamplingRate, param)
 {
     bActive = false;
     x.resize(BSIZE);
 
-    // Parsear los parámetros utilizando KeyValue si es necesario
+    /*
+      You can use the class keyvalue to parse "param" and configure your instrument.
+      Take a Look at keyvalue.h
+    */
     KeyValue kv(param);
-
-    // Asignar valores por defecto si los parámetros no están presentes
     if (!kv.to_int("N", N))
-        N = 40; // Valor por defecto para N
+        N = 40; // default value
+
+    // signal amplitude adsr
+    if (!kv.to_float("ADSR_A", adsr_a))
+        adsr_a = 0.1; //"Attack" adsr parameter
+
+    if (!kv.to_float("ADSR_D", adsr_d))
+        adsr_d = 0.05; //"Decay" adsr parameter
+
+    if (!kv.to_float("ADSR_S", adsr_s))
+        adsr_s = 0.5; //"Sustain" adsr parameter
+
+    if (!kv.to_float("ADSR_R", adsr_r))
+        adsr_r = 0.1; //"Release" adsr parameter
 
     if (!kv.to_float("max_level", max_level))
-        max_level = 0.02; // Valor por defecto para max_level
+        max_level = 0.02; // maximum level of the signal
 
-    // Inicializar otros parámetros de síntesis FM según sea necesario
-    // Por ejemplo: N1, N2, I1, I2, setting, etc.
+    if (!kv.to_float("I1", I1))
+        I1 = 1; // modulation index 1
 
-    // Configurar las envolventes ADSR con los parámetros correspondientes
-    adsr.set(adsr_a, adsr_d, adsr_s, adsr_r, 1.5F);
-    adsr2.set(adsr_a2, adsr_d2, adsr_s2, adsr_r2, 1.5F);
+    if (!kv.to_float("N1", N1))
+        N1 = 1; // default N1 value
 
-    // Inicializar otras variables de estado según sea necesario
+    if (!kv.to_float("N2", N2))
+        N2 = 1; // default N2 value
+
+    if (!kv.to_float("setting", setting))
+        setting = 0; // default setting (standard adsr == 0, exp >0, string adsr ==-1)
+
+    if (setting == -1)
+    {
+        adsr.set(adsr_a, 0, adsr_s, adsr_r, 1.5F);
+    }
+    mod_phase = 0;
+    index_sen = 0;
+
+    std::string file_name;
+    static string kv_null;
+    tbl.resize(N);
+    float phase = 0, step = 2 * M_PI / (float)N;
+    index = 0;
+    for (int i = 0; i < N; ++i)
+    {
+        tbl[i] = sin(phase);
+        phase += step;
+    }
 }
 
 void SenoFM::command(long cmd, long note, long vel)
@@ -41,102 +77,83 @@ void SenoFM::command(long cmd, long note, long vel)
     { //'Key' pressed: attack begins
         bActive = true;
         adsr.start();
-        adsr2.start();
+        float f0note = pow(2, ((float)note - 69) / 12) * 440; // convert note in semitones to frequency (Hz)
+        Nnote = 1 / f0note * SamplingRate;                    // obtain note period in samples
+        index_step = (float)N / Nnote;                        // obtain step (relationship between table period and note period)
 
-        // Calcular la frecuencia fundamental de la nota a partir del número de semitono
-        float f0note = pow(2, ((float)note - 69) / 12) * 440;
-
-        // Calcular el período de la nota en muestras
-        float Nnote = 1.0f / f0note * SamplingRate;
-
-        // Calcular el paso de índice para relacionar el período de la tabla y el de la nota
-        index_step = (float)N / Nnote;
-
-        // Reiniciar contadores y fases
+        // reset counters/phase
         index = 0;
         index_sen = 0;
         mod_phase = 0;
         decay_count = 0;
         decay_count_I = 0;
 
-        // Calcular la frecuencia de modulación
-        fm = f0note * N2 / N1;
+        fm = f0note * N2 / N1;                         // modulating frequency
+        mod_phase_step = 2 * M_PI * fm / SamplingRate; // step of the modulating sine I*sin(2*pi*fm/SamplingRate)
 
-        // Calcular el paso de la fase de modulación
-        mod_phase_step = 2 * M_PI * fm / SamplingRate;
-
-        // Redimensionar el buffer para un período de la señal
         note_int = round(Nnote);
         x_tm.resize(note_int);
 
-        // Ajustar la amplitud según la velocidad de la nota
         if (vel > 127)
             vel = 127;
-        A = vel / 127.0f;
+
+        A = vel / 127.;
     }
     else if (cmd == 8)
     { //'Key' released: sustain ends, release begins
         adsr.stop();
-        adsr2.stop();
     }
     else if (cmd == 0)
-    { //'Key' released: release faster, but don't end it abruptly
+    {
+        // release faster, but don't end it abruptly
         adsr.set(adsr_s, adsr_a, adsr_d, adsr_r / 4, 1.5F);
         adsr.stop();
-        adsr2.set(adsr_s2, adsr_a2, adsr_d2, adsr_r2 / 4, 1.5F);
-        adsr2.stop();
     }
 }
 
 const vector<float> &SenoFM::synthesize()
 {
-    if (!adsr.active())
+    if (not adsr.active())
     {
         x.assign(x.size(), 0);
         bActive = false;
         return x;
     }
-    else if (!bActive)
-    {
+    else if (not bActive)
         return x;
-    }
 
-    unsigned int index_floor, next_index; // Índices de interpolación
-    float weight, weight_fm;              // Pesos de interpolación
-    std::vector<float> I_array(x.size()); // Arreglo para almacenar el valor de I para cada muestra
+    unsigned int index_floor, next_index; // interpolation indexes
+    float weight, weight_fm;              // interpolation weights
+    int index_floor_fm, next_index_fm;    // frequency interpolation weights
+    std::vector<float> I_array(x.size()); // I is now a function of t
 
-    // Llenar el arreglo con el valor I constante del usuario
+    // fill array with the user-input I value (constant)
     for (unsigned int i = 0; i < x.size(); i++)
     {
         I_array[i] = (I2 - I1);
-
-        // Aplicar la envolvente exponencial si está seleccionada
+        // apply exponential envelope if selected
         if (setting > 0)
             I_array[i] = I_array[i] * pow(setting, decay_count_I);
     }
 
-    // Aplicar la función variable en el tiempo al arreglo
-    if (setting <= 0)
-        adsr2(I_array);
-
-    // Ajustar el valor de I para cada muestra
     for (unsigned int i = 0; i < x.size(); i++)
     {
         I_array[i] = (I1 + I_array[i]);
     }
 
-    // Llenar x_tm con un período de la nueva señal
+    // fill x_tm with a period of the new signal
     for (unsigned int i = 0; i < (unsigned int)note_int; ++i)
     {
-        // Verificar si el índice flotante está fuera de los límites
+
+        // check if the floating point index is out of bounds
         if ((long unsigned int)floor(index) > tbl.size() - 1)
             index = index - floor(index);
 
-        // Obtener el índice como entero
+        // Obtain the index as an integer
         index_floor = (int)floor(index);
         weight = index - index_floor;
 
-        // Ajustar los índices de interpolación si es necesario
+        // fix interpolation indexes if needed
         if (index_floor == (unsigned int)N - 1)
         {
             next_index = 0;
@@ -146,76 +163,71 @@ const vector<float> &SenoFM::synthesize()
         {
             next_index = index_floor + 1;
         }
+        // interpolate table values
 
-        // Interpolar los valores de la tabla
         x_tm[i] = ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
-
-        // Actualizar el índice real
+        // update real index
         index = index + index_step;
     }
 
-    // Modular la señal
+    // modulate the signal
     for (unsigned int i = 0; i < x.size(); ++i)
     {
-        // Verificar si el índice de modulación está fuera de los límites
+        // check if the floating point index is out of bounds
         if (index_sen < 0)
         {
-            index_sen = note_int + index_sen;
+            index_sen = Nnote + index_sen;
         }
         if ((int)floor(index_sen) > note_int - 1)
         {
+
             index_sen = index_sen - (note_int - 1);
         }
+        // Obtain the index as an integer
+        index_floor_fm = floor(index_sen);
+        weight_fm = index_sen - index_floor_fm;
 
-        // Obtener el índice como entero
-        int index_floor_fm = floor(index_sen);
-        float weight_fm = index_sen - index_floor_fm;
-
-        // Ajustar los índices de interpolación si es necesario
+        // fix interpolation indexes if needed
         if (index_floor_fm == note_int - 1)
         {
-            next_index = 0;
+            next_index_fm = 0;
             index_floor_fm = note_int - 1;
         }
         else
         {
-            next_index = index_floor_fm + 1;
+            next_index_fm = index_floor_fm + 1;
         }
+        // interpolate table values
+        x[i] = A * ((1 - weight_fm) * x_tm[index_floor_fm] + weight_fm * (x_tm[next_index_fm]));
 
-        // Interpolar los valores de la tabla
-        x[i] = A * ((1 - weight_fm) * x_tm[index_floor_fm] + weight_fm * (x_tm[next_index]));
-
-        // Actualizar el índice real (fase) y la fase modulada
+        // update real index (phase) and modulated phase
         index_sen = index_sen + 1 - I_array[i] * sin(mod_phase);
         mod_phase = mod_phase + mod_phase_step;
     }
 
-    // Asegurarse de que la fase modulada esté dentro del rango [-pi, pi]
     while (mod_phase > M_PI)
         mod_phase -= 2 * M_PI;
 
-    // Aplicar la envolvente exponencial o ADSR
+    // apply exponential or adsr envelope
+
     for (unsigned int i = 0; i < x.size(); i++)
     {
         if (setting != 0)
         {
-            if (setting > 0) // Decrecer exponencialmente según el setting
+            if (setting > 0) // decrease exponentially according to the setting
             {
                 x[i] = x[i] * max_level * pow(setting, decay_count);
                 decay_count++;
             }
             else if (adsr.active() && setting == -1)
             {
-                x[i] = x[i] * adsr_s; // Ajustar el nivel para evitar que el ataque supere el umbral de sustain
+                x[i] = x[i] * adsr_s; // correct level so that the attack doesn't reach values over the sustain threshold
             }
         }
         else
-            x[i] = x[i] * max_level; // Ajustar el nivel máximo para evitar la saturación al superponer múltiples señales
+            x[i] = x[i] * max_level; // correct max level so it doesn't saturate when overlapping multiple signals
     }
-
-    // Aplicar la envolvente ADSR a x y actualizar el estado interno de ADSR si es necesario
     if (setting <= 0)
-        adsr(x);
-
+        adsr(x); // apply envelope to x and update internal status of ADSR
     return x;
 }
