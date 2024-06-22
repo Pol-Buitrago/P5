@@ -753,8 +753,8 @@ Escala diatónica de Do mayor usando sonido tipo campana
 Una vez definidos los archivos `doremi.sco` con las escalas diatónicas, podemos usar el programa `synth` para generar los archivos de audio `clarinete.wav` y `campana.wav`:
 
 ```bash
-synth work/clarinete.orc work/doremi_clarinete.sco work/clarinete.wav
-synth work/campana.orc work/doremi_campana.sco work/campana.wav
+synth work/seno.orc work/doremi.sco work/clarinete.wav  # Segunda línea del seno.orc
+synth work/seno.orc work/doremi.sco work/campana.wav    # Tercera línea del seno.orc
 ```
 
   * También puede colgar en el directorio work/doremi otras escalas usando sonidos *interesantes*. Por ejemplo, violines, pianos, percusiones, espadas láser de la
