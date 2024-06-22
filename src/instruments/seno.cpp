@@ -37,7 +37,7 @@ InstrumentSeno::InstrumentSeno(const std::string &param)
   }
 
   /*we can also implemented seno instrument to be percussive (with exponential final decay)*/
-  if (kv("percussive") != "false")
+  if (kv("percussive") == "false")
     percussive = false; // default value
   else
   {
