@@ -69,7 +69,7 @@ permitan visualizar el funcionamiento de la curva ADSR.
 
   - *podemos ver como el ADSR descrito abajo cumple con las condiciones de dicho tipo de instrumento:*
 
-  ![gráfica de una ADSR plana](img/ADSR_plano.png)
+  ![gráfica de una ADSR plana](img/ADSR_plano.png)CAMBIAR GRAFICA PQ NO TINGUI CAÍDA
 
 Para los cuatro casos, deberá incluir una gráfica en la que se visualice claramente la curva ADSR. Deberá
 añadir la información necesaria para su correcta interpretación, aunque esa información puede reducirse a

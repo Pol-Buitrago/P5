@@ -37,11 +37,11 @@ InstrumentSeno::InstrumentSeno(const std::string &param)
   }
 
   /*we can also implemented seno instrument to be percussive (with exponential final decay)*/
-  if (kv("percussive") == "false")
-    percussive = false; // default value
+  if (kv("percussive") == "true")
+    percussive = true; // default value
   else
   {
-    percussive = true;
+    percussive = false;
   }
 
   // Create a tbl with one period of a sinusoidal wave
