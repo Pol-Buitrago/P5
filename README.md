@@ -55,12 +55,16 @@ permitan visualizar el funcionamiento de la curva ADSR.
 
       ![gráfica de una ADSR percusiva (1)](img/ADSR_percusivo1.png)
 
+      ![ADSR Curve](img/ADSR_doremi_percussive1.png)
+
     * El intérprete da por finalizada la nota antes de su completa extinción, iniciándose una disminución
 	  abrupta del sonido hasta su finalización.
 
       - *ahora el tramo de liberación debe suponer una mayor extensión, debido a que, como dice el enunciado, el intérprete ha dado por finalizada la nota "antes de tiempo".*
 
       ![gráfica de una ADSR percusiva (2)](img/ADSR_percusivo2.png)
+
+      ![ADSR Curve](img/ADSR_doremi_percussive2.png)
 
   - Debera representar en esta memoria **ambos** posibles finales de la nota.
 * Un instrumento *plano*, como los de cuerdas frotadas (violines y semejantes) o algunos de viento. En
@@ -71,9 +75,16 @@ permitan visualizar el funcionamiento de la curva ADSR.
 
   ![gráfica de una ADSR plana](img/ADSR_plano.png)CAMBIAR GRAFICA PQ NO TINGUI CAÍDA
 
+  ![ADSR Curve](img/ADSR_doremi_plano.png)
+
+
+
 Para los cuatro casos, deberá incluir una gráfica en la que se visualice claramente la curva ADSR. Deberá
 añadir la información necesaria para su correcta interpretación, aunque esa información puede reducirse a
 colocar etiquetas y títulos adecuados en la propia gráfica (se valorará positivamente esta alternativa).
+
+---
+---
 
 ### Instrumentos Dumb y Seno.
 
@@ -173,7 +184,10 @@ void InstrumentSeno::command(long cmd, long note, long vel) {
 }
 ```  
 
-### Efectos sonoros.
+---
+---
+
+# Efectos sonoros.
 
 - Incluya dos gráficas en las que se vean, claramente, el efecto del trémolo y el vibrato sobre una señal sinusoidal. Deberá explicar detalladamente cómo se manifiestan los parámetros del efecto (frecuencia e índice de modulación) en la señal generada (se valorará que la explicación esté contenida en las propias gráficas, sin necesidad de *literatura*).
 
@@ -243,6 +257,8 @@ synth -e effects.orc seno.orc doremi.sco seno_tremolo_normal.wav
 
 *El fichero de audio de salida (`.wav`) del do-re-mi con éste trémolo de baja potencia aplicado se halla, como todos los ficheros de audio, en el directorio `work/` y se llama **seno_tremolo_normala.wav**.*
 
+## *Trémolo Agresivo*
+
 *Ahora pasamos a aplicar un efecto del tremolo aún más fuerte. Para cambiar las propidades del efecto, basta con modificar el fichero `work/effects.orc`, que ahora cogerá la siguiente forma:*
 
 ```shell
@@ -268,12 +284,19 @@ synth -e effects.orc seno.orc doremi.sco seno_tremolo_agresivo.wav
 
 ![Ampliación Nota Re Bajo Efecto Del Tremolo Agresivo](img/seno_tremolo_agresivo_noInterpolation_zoom.png)
 
+*Imagen generada a partir del código Python en `scripts/tremolo3.py`*
+
 
 *Podemos apreciar como el tremolo, aplicado con parámetros más "extravagantes", realmente da lugar a transformaciones del señal interesantes y que pueden ser útiles a la hora de sintetizar sonidos únicos. También destacar la información de alta calidad que nos proporciona la leyenda de esta imagen. Si tenemos en cuenta que el tremolo aplicado ha sido uno con frecuencia de modulación 10 Hz, tiene sentido que un periodo de modulación de la amplitud dure 100 ms (una décima de un segundo) como se ha podido comprobar también de forma empírica, donde el primer máximo se encuenra al instante 0,89 segundos y el siguiente más próximo a 0,99 segundos.*
 
+---
+---
+
 ## *Vibrato*
 
-*Ahora procedemos con el análisis del efecto vibrato. Para hacer un contraste de las distintas posibilidades de este efecto, igual que con el Tremolo, hemos diseñado 2 orquestaciones, uno con la aplicación de un vibrato "leve" o "normal" (I=0.5 y fm=10Hz) y otro con un vibrato más "fuerte" o "agresivo" (I=24 y fm=200Hz). También hacer mención, antes de entrar más a detalle, que este efecto, a diferencia del Tremolo, supone una variación de la velocidad con la que se recorre la tabla de muestras sonoros (el seno) y por lo tanto puede aplicarse con y sin interpolación. Acabaremos esta explicación con una aplicación del vibrato con interpolación y así poder ver las diferencias entre hacer o no hacer dicha interpolación (estos 2 primers casos no tendrán interpolación):*
+*El efecto Vibrato consiste en una modulación periódica de la frecuencia de la señal de audio. Esta modulación produce una variación en el tono que puede ser percibida como un ligero temblor o vibración en el sonido. En el contexto de los efectos de audio, el Vibrato puede ajustarse para ser sutil o muy pronunciado, según los parámetros utilizados.*
+
+*Para analizar el efecto Vibrato, hemos creado dos configuraciones: un Vibrato "leve" o "normal" con una ligera modulación (I=0.5 y fm=10Hz) y un Vibrato "fuerte" o "agresivo" con una modulación más pronunciada (I=24 y fm=200Hz). A continuación, se describen ambos casos y su impacto en la señal de audio, tanto en el dominio temporal como frecuencial.*
 
 ### *Vibrato Normal*
 
@@ -329,21 +352,115 @@ synth -e effects.orc seno.orc doremi.sco seno_vibrato_normal.wav
 
 *La primera fila supone la pareja (señal temporal sin tremolo, FFT de dicho señal) mientras que la segunda está diseñada para que haga de contraste con la anterior, donde podemos ver que frecuencialmente existe bastante perturbación. Las demas filas que siguen sirven para ver la peturbación aplicada a cada nota, donde ya deja de existir un afinado y bien definido pico frecuencial (como debería ser según la teoría) sino que existe energía en las frecuencias justo vecinas de ese mismo pico, contaminándola frecuencialmente.*
 
+![Comparación Espectograma Vibrato Normal](img/audio_comparison_vibrato_normal.png)
+
+*En el espectrograma, podemos observar que la frecuencia de cada nota "vibra" alrededor de su valor central, lo que es una característica distintiva del efecto vibrato. Esto se debe a la modulación periódica de la frecuencia, que hace que la frecuencia instantánea de la señal varíe continuamente.*
+
 
 ### *Vibrato Agresivo*
 
+*El Vibrato Agresivo se diferencia por tener valores más altos de frecuencia de modulación (fm) y desviación (I). En este caso, hemos configurado fm=200Hz e I=24, lo que produce un efecto mucho más pronunciado y evidente en la señal de audio.*
+
+**effects.orc**
+
+Hemos añadido la siguiente línea de metadatos:
+
+```shell
+14  Vibrato I=24; fm=200;
+```
+
+**doremi.sco**
+
+El archivo `doremi.sco` es el mismo que el utilizado para el Vibrato Normal.
+
+Luego ejecutamos el programa **synth** como siempre:
+
+```shell
+synth -e effects.orc seno.orc doremi.sco seno_vibrato_agresivo.wav
+```
+
+*Al escuchar atentamente el archivo resultante, la modulación más rápida (fm=200Hz) y la mayor desviación (I=24) hacen que las frecuencias de las notas varíen de manera mucho más agresiva, lo que se traduce en un sonido más vibrante e inestable.*
+
 ![Graficas de comparación Waveform Normal vs Waveform + Vibrato](img/DoReMi_Vibrato_FFT_agresivo.png)
 
-FER EXPLICACIO
+*En la FFT, se observa una mayor dispersión de energía de las frecuencias centrales de cada nota. A diferencia del Vibrato Normal, donde la frecuencia central vibra alrededor de un punto, en el Vibrato Agresivo aparecen armónicos alejados de la frecuencia central. Estos armónicos indican que la señal está experimentando modulación a frecuencias mucho más altas, produciendo componentes de frecuencia adicionales que se distancian de la frecuencia original de la nota. Esto resulta en una representación frecuencial mucho más compleja y dispersa.*
 
-### *Vibrato Normal + Interpolado*
+![Comparación Espectograma Vibrato Agresivo](img/audio_comparison_vibrato_agresivo.png)
 
-FER EXPLICACIO
-
+*En el espectrograma, esta modulación agresiva se manifiesta en la aparición de bandas adicionales que representan los armónicos producidos por la modulación agresiva. Estos armónicos están más alejados de las frecuencias centrales, indicando un mayor grado de perturbación. En lugar de una vibración suave alrededor de una frecuencia central, el espectrograma muestra un conjunto de frecuencias adicionales que se extienden lejos de la frecuencia principal de la nota, haciendo que el sonido sea percibido como más caótico y desorganizado.*
 
 - Si ha generado algún efecto por su cuenta, explique en qué consiste, cómo lo ha implementado y qué resultado ha producido. Incluya, en el directorio `work/ejemplos`, los ficheros necesarios para apreciar el efecto, e indique, a continuación, la orden necesaria para generar los ficheros de audio usando el programa `synth`.
 
 *Hemos hecho la implementación del efecto llamado **fuzz**.* EXPLICAR QUE ES EL FUZZ I LA RESTA DE COSES QUE ET DIU L'ENUNCIAT
+
+---
+---
+
+### *Fuzz*
+
+*El efecto **fuzz** es un tipo de distorsión de audio que produce un sonido muy característico y agresivo. Este efecto se utiliza frecuentemente en la música rock y otros géneros para añadir un tono áspero y sucio a la señal de audio. A diferencia de la distorsión más suave que se podría obtener con un overdrive o una saturación, el fuzz es mucho más pronunciado y se caracteriza por su alta ganancia y la compresión de la señal.*
+
+*Para implementar el efecto fuzz, hemos diseñado un algoritmo que modifica la señal de entrada de la siguiente manera:*
+
+1. **Ganancia (gain):** *Se amplifica la señal de entrada para aumentar su amplitud antes de aplicar la distorsión.*
+2. **Curva de transferencia:** *Se utiliza una función tangente hiperbólica (tanh) para comprimir la señal, lo que introduce la distorsión característica del fuzz.*
+3. **Mezcla (mix):** *La señal distorsionada se mezcla con la señal original para mantener algo de su carácter original.*
+4. **Damping de alta frecuencia (hf_damp):** *Se aplica un factor de amortiguación para reducir las frecuencias altas, lo que suaviza un poco la distorsión.*
+
+**effects.orc**
+
+*Hemos añadido la siguiente línea de metadatos:*
+
+```shell
+12  Fuzz
+```
+
+**doremi.sco**
+
+*El archivo `doremi.sco` contiene las siguientes instrucciones para aplicar el efecto fuzz:*
+
+```shell
+#Time; On (8)/Off (9); Channel; Note; Velocity;
+#Time; Control; Channel; Effect; On/Off;
+0	9	1	60	100
+120	8	1	60	100
+0   12  1   12  1 #fuzz inicio
+40	9	1	62	100
+120	8	1	62	100
+40	9	1	64	100
+120	8	1	64	100
+40	9	1	65	100
+120	8	1	65	100
+40	9	1	67	100
+120	8	1	67	100
+40	9	1	69	100
+120	8	1	69	100
+40	9	1	71	100
+0   12  1   12  0 #fuzz final
+120	8	1	71	100
+40	9	1	72	100
+120	8	1	72	100
+40	0	1	0	0
+```
+
+*Luego ejecutamos el programa **synth** para generar el archivo de audio con el efecto aplicado:*
+
+```shell
+synth -e work/effects.orc work/seno.orc work/doremi.sco work/audio_con_fuzz.wav
+```
+
+*En el espectrograma del audio con el efecto fuzz, se puede observar que la señal original ha sido significativamente alterada. A diferencia de los efectos de vibrato y tremolo, que modulan la frecuencia o la amplitud de la señal original, el fuzz introduce armónicos y distorsión en la señal, resultando en un espectro de frecuencia mucho más complejo. Esto se traduce en un sonido más agresivo y áspero, con una amplia gama de frecuencias adicionales que se extienden alrededor de la frecuencia central de cada nota.*
+
+![Comparación Espectograma Fuzz](img/audio_comparison_Fuzz.png)
+
+*En el espectrograma, esta dispersión de frecuencias se manifiesta como bandas más anchas y ruidosas alrededor de las frecuencias fundamentales de las notas. Esto da como resultado un sonido más lleno y rico, aunque menos puro y afinado. La distorsión característica del fuzz es evidente en la forma en que la energía se distribuye a lo largo del espectro, mostrando la complejidad y el caos introducidos por este efecto.*
+
+*A nivel temporal, la distorsión y saturación de las notas se deben principalmente al proceso de generación de armónicos no lineales introducido por el efecto fuzz. Cuando una señal de audio se distorsiona, las ondas sinusoidales puras que representan las notas musicales se transforman en formas de onda más complejas y ricas en armónicos. Estos armónicos adicionales no están alineados armónicamente con la frecuencia fundamental de la nota original, lo que resulta en una forma de onda que cambia su estructura temporal.*
+
+*En algunas notas, la distorsión puede manifestarse como una amplificación excesiva de ciertos armónicos, dando lugar a una saturación muy perceptible en la señal, tal y como vemos en la imagen. Esto se traduce en un aumento abrupto en la amplitud de la señal en esos armónicos, lo que resulta en una pérdida de definición y claridad en la nota original.*
+
+---
+---
 
 ### Síntesis FM.
 
@@ -356,6 +473,9 @@ de [John M. Chowning](https://web.eecs.umich.edu/~fessler/course/100/misc/chowni
 
   * También puede colgar en el directorio work/doremi otras escalas usando sonidos *interesantes*. Por ejemplo, violines, pianos, percusiones, espadas láser de la
 	[Guerra de las Galaxias](https://www.starwars.com/), etc.
+
+---
+---
 
 ### Orquestación usando el programa synth.
 
@@ -376,3 +496,6 @@ de su agrado o composición. Se valorará la riqueza instrumental, su modelado y
   `work/music`.
 - Indique, a continuación, la orden necesaria para generar cada una de las señales usando los distintos
   ficheros.
+
+---
+---
