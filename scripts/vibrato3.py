@@ -13,15 +13,17 @@ plt.rcParams['figure.figsize'] = [15, 25]  # Ancho x Alto en pulgadas
 
 # Ruta de los archivos de audio
 file_path_normal = os.path.join('work', 'seno.wav')
-file_path_vibrato = os.path.join('work', 'seno_vibrato_agresivo.wav')
+file_path_vibrato = os.path.join('work', 'seno_vibrato_normal_interpolado.wav')
 
 # Directorio para guardar la imagen
 img_dir = os.path.join('img')
 if not os.path.exists(img_dir):
     os.makedirs(img_dir)
-img_path = os.path.join(img_dir, 'DoReMi_Vibrato_FFT.png')
+img_path = os.path.join(img_dir, 'DoReMi_Vibrato_normal_interpolado_FFT.png')
 
 # Función para calcular y graficar la FFT limitada hasta 1 kHz y agregar líneas de picos
+
+
 def plot_fft_comparison_with_peaks(file_path, subplot_index, title):
     global peaks_normal, peaks_vibrato  # Acceder a los picos globales
 
@@ -43,7 +45,7 @@ def plot_fft_comparison_with_peaks(file_path, subplot_index, title):
     fft_abs = np.abs(fft_result)
 
     # Limitar la visualización hasta 1 kHz
-    max_freq_limit = 1000  # Hz
+    max_freq_limit = 2000  # Hz
     max_visible_index = np.argmax(fft_freqs >= max_freq_limit)
 
     # Gráfico de la señal en el dominio del tiempo
@@ -55,7 +57,8 @@ def plot_fft_comparison_with_peaks(file_path, subplot_index, title):
 
     # Gráfico de la FFT (espectro de frecuencia)
     plt.subplot(9, 3, subplot_index + 1)
-    plt.plot(fft_freqs[:max_visible_index], fft_abs[:max_visible_index], color='r')
+    plt.plot(fft_freqs[:max_visible_index],
+             fft_abs[:max_visible_index], color='r')
     plt.title(f'{title} FFT (Frequency Spectrum)')
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude')
@@ -63,13 +66,16 @@ def plot_fft_comparison_with_peaks(file_path, subplot_index, title):
 
     if (subplot_index == 1):
         # Encontrar picos en la FFT
-        smoothed_fft_abs = savgol_filter(fft_abs[:max_visible_index], 51, 3)  # Aplicar filtro Savitzky-Golay para suavizar
-        peaks, _ = find_peaks(smoothed_fft_abs, distance=int(2 / (fft_freqs[1] - fft_freqs[0])))  # Encontrar picos
+        # Aplicar filtro Savitzky-Golay para suavizar
+        smoothed_fft_abs = savgol_filter(fft_abs[:max_visible_index], 51, 3)
+        peaks, _ = find_peaks(smoothed_fft_abs, distance=int(
+            2 / (fft_freqs[1] - fft_freqs[0])))  # Encontrar picos
 
         # Tomar los 8 picos más altos
         if len(peaks) > 8:
             peak_values = smoothed_fft_abs[peaks]
-            peak_indices = peaks[np.argsort(-peak_values)[:8]]  # Indices de los 8 picos más altos
+            # Indices de los 8 picos más altos
+            peak_indices = peaks[np.argsort(-peak_values)[:8]]
             peak_freqs = fft_freqs[:max_visible_index][peak_indices]
         else:
             peak_freqs = fft_freqs[:max_visible_index][peaks]
@@ -85,6 +91,8 @@ def plot_fft_comparison_with_peaks(file_path, subplot_index, title):
     return peaks_normal
 
 # Función para graficar la FFT de una nota específica del caso vibrato
+
+
 def plot_individual_note_fft(file_path_normal, file_path_vibrato, subplot_index, note_name):
     global peaks_normal, peaks_vibrato  # Acceder a los picos globales
 
@@ -100,7 +108,8 @@ def plot_individual_note_fft(file_path_normal, file_path_vibrato, subplot_index,
     note_duration = total_time / 8
 
     # Definir los tiempos de inicio y fin para la nota específica
-    note_index = ['do', 're', 'mi', 'fa', 'sol', 'la', 'si', 'do2'].index(note_name)
+    note_index = ['do', 're', 'mi', 'fa', 'sol',
+                  'la', 'si', 'do2'].index(note_name)
     start_time = note_duration * note_index
     end_time = start_time + note_duration
 
@@ -113,19 +122,21 @@ def plot_individual_note_fft(file_path_normal, file_path_vibrato, subplot_index,
     audio_data_note_vibrato = audio_data_vibrato[start_sample:end_sample]
 
     # Generar eje de tiempo en segundos para la nota específica
-    time_axis_note = np.linspace(start_time, end_time, len(audio_data_note_normal))
+    time_axis_note = np.linspace(
+        start_time, end_time, len(audio_data_note_normal))
 
     # Calcular la Transformada de Fourier de la señal de la nota específica
     fft_result_note_normal = np.fft.fft(audio_data_note_normal)
     fft_result_note_vibrato = np.fft.fft(audio_data_note_vibrato)
-    fft_freqs_note = np.fft.fftfreq(len(fft_result_note_normal), 1 / sampling_rate_normal)
+    fft_freqs_note = np.fft.fftfreq(
+        len(fft_result_note_normal), 1 / sampling_rate_normal)
 
     # Calcular los valores absolutos de la FFT de la nota específica
     fft_abs_note_normal = np.abs(fft_result_note_normal)
     fft_abs_note_vibrato = np.abs(fft_result_note_vibrato)
 
     # Limitar la visualización hasta 1 kHz para la nota específica
-    max_freq_limit = 1000  # Hz
+    max_freq_limit = 2000  # Hz
     max_visible_index = np.argmax(fft_freqs_note >= max_freq_limit)
 
     # Gráfico de la señal de la nota específica en el dominio del tiempo
@@ -137,7 +148,8 @@ def plot_individual_note_fft(file_path_normal, file_path_vibrato, subplot_index,
 
     # Gráfico de la FFT (espectro de frecuencia) de la nota específica - Normal
     plt.subplot(9, 3, subplot_index + 1)
-    plt.plot(fft_freqs_note[:max_visible_index], fft_abs_note_normal[:max_visible_index], color='m')
+    plt.plot(fft_freqs_note[:max_visible_index],
+             fft_abs_note_normal[:max_visible_index], color='m')
     plt.title(f'Normal "{note_name.capitalize()}" FFT')
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude')
@@ -149,7 +161,8 @@ def plot_individual_note_fft(file_path_normal, file_path_vibrato, subplot_index,
 
     # Gráfico de la FFT (espectro de frecuencia) de la nota específica - Vibrato
     plt.subplot(9, 3, subplot_index + 2)
-    plt.plot(fft_freqs_note[:max_visible_index], fft_abs_note_vibrato[:max_visible_index], color='c')
+    plt.plot(fft_freqs_note[:max_visible_index],
+             fft_abs_note_vibrato[:max_visible_index], color='c')
     plt.title(f'Vibrato "{note_name.capitalize()}" FFT')
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude')
@@ -158,6 +171,7 @@ def plot_individual_note_fft(file_path_normal, file_path_vibrato, subplot_index,
     # Graficar los picos globales como líneas verticales
     for freq in peaks_vibrato:
         plt.axvline(x=freq, color='g', linestyle='--', linewidth=1)
+
 
 # Graficar ambas señales y sus FFT, incluyendo las 8 notas del caso vibrato
 plt.figure()
@@ -171,10 +185,12 @@ peaks_vibrato = plot_fft_comparison_with_peaks(file_path_vibrato, 2, 'Vibrato')
 # Graficar las notas individuales del caso vibrato
 notes = ['do', 're', 'mi', 'fa', 'sol', 'la', 'si', 'do2']
 for i, note in enumerate(notes):
-    plot_individual_note_fft(file_path_normal, file_path_vibrato, 4 + 3 * i, note)
+    plot_individual_note_fft(
+        file_path_normal, file_path_vibrato, 4 + 3 * i, note)
 
 # Añadir título general
-plt.suptitle('DoReMi con Vibrato con FFT individual para cada nota', fontsize=16)
+plt.suptitle(
+    'DoReMi con Vibrato con FFT individual para cada nota', fontsize=16)
 
 # Ajustar el diseño de la figura
 plt.tight_layout(rect=[0, 0, 1, 0.97])

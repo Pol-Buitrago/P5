@@ -13,6 +13,7 @@ sources = [
 	'effects/vibrato.cpp',
 	'instruments/seno.cpp',
 	'instruments/percussive.cpp',
+	'effects/fuzz.cpp',
 ]
 
 executable(

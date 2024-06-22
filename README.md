@@ -323,7 +323,7 @@ synth -e effects.orc seno.orc doremi.sco seno_vibrato_normal.wav
 
 ![Graficas de comparación Waveform Normal vs Waveform + Vibrato](img/DoReMi_Vibrato_FFT_normal.png)
 
-**Imagen generada a partir del código Python en `scripts/vibrato3.py`**
+***Imagen generada a partir del código Python en `scripts/vibrato3.py`***
 
 *Si miramos fijadamente, solo la primera y las 2 últimas notas permanecen puras, es decir, no presencian el efecto del vibrato. Esto es fácilmente explicado por el `doremi.sco` que hemos usado, donde podemos ver que solo aplicamos el vibrato a un conjunto intermedio de notas. En cuanto a estas notas que sí tienen perturbación, podemos ver que las representaciones temporales no son muy efectivas para ver los efectos de dicha perturbación. Por eso hemos empleado el uso de la transformada de Fourier, cuya representación sí nos da una mucha mejor visualización de la perturbación provocada por el efecto del vibrato.*
 
@@ -334,28 +334,27 @@ synth -e effects.orc seno.orc doremi.sco seno_vibrato_normal.wav
 
 ![Graficas de comparación Waveform Normal vs Waveform + Vibrato](img/DoReMi_Vibrato_FFT_agresivo.png)
 
+FER EXPLICACIO
 
 ### *Vibrato Normal + Interpolado*
-- Si ha generado algún efecto por su cuenta, explique en qué consiste, cómo lo ha implementado y qué
-  resultado ha producido. Incluya, en el directorio `work/ejemplos`, los ficheros necesarios para apreciar
-  el efecto, e indique, a continuación, la orden necesaria para generar los ficheros de audio usando el
-  programa `synth`.
+
+FER EXPLICACIO
+
+
+- Si ha generado algún efecto por su cuenta, explique en qué consiste, cómo lo ha implementado y qué resultado ha producido. Incluya, en el directorio `work/ejemplos`, los ficheros necesarios para apreciar el efecto, e indique, a continuación, la orden necesaria para generar los ficheros de audio usando el programa `synth`.
+
+*Hemos hecho la implementación del efecto llamado **fuzz**.* EXPLICAR QUE ES EL FUZZ I LA RESTA DE COSES QUE ET DIU L'ENUNCIAT
 
 ### Síntesis FM.
 
 Construya un instrumento de síntesis FM, según las explicaciones contenidas en el enunciado y el artículo
-de [John M. Chowning](https://web.eecs.umich.edu/~fessler/course/100/misc/chowning-73-tso.pdf). El
-instrumento usará como parámetros **básicos** los números `N1` y `N2`, y el índice de modulación `I`, que
-deberá venir expresado en semitonos.
+de [John M. Chowning](https://web.eecs.umich.edu/~fessler/course/100/misc/chowning-73-tso.pdf). El instrumento usará como parámetros **básicos** los números `N1` y `N2`, y el índice de modulación `I`, que deberá venir expresado en semitonos.
 
-- Use el instrumento para generar un vibrato de *parámetros razonables* e incluya una gráfica en la que se
-  vea, claramente, la correspondencia entre los valores `N1`, `N2` e `I` con la señal obtenida.
-- Use el instrumento para generar un sonido tipo clarinete y otro tipo campana. Tome los parámetros del
-  sonido (N1, N2 e I) y de la envolvente ADSR del citado artículo. Con estos sonidos, genere sendas escalas
-  diatónicas (fichero `doremi.sco`) y ponga el resultado en los ficheros `work/doremi/clarinete.wav` y
-  `work/doremi/campana.work`.
-  * También puede colgar en el directorio work/doremi otras escalas usando sonidos *interesantes*. Por
-    ejemplo, violines, pianos, percusiones, espadas láser de la
+- Use el instrumento para generar un vibrato de *parámetros razonables* e incluya una gráfica en la que se vea, claramente, la correspondencia entre los valores `N1`, `N2` e `I` con la señal obtenida.
+
+- Use el instrumento para generar un sonido tipo clarinete y otro tipo campana. Tome los parámetros del sonido (N1, N2 e I) y de la envolvente ADSR del citado artículo. Con estos sonidos, genere sendas escalas diatónicas (fichero `doremi.sco`) y ponga el resultado en los ficheros `work/doremi/clarinete.wav` y `work/doremi/campana.work`.
+
+  * También puede colgar en el directorio work/doremi otras escalas usando sonidos *interesantes*. Por ejemplo, violines, pianos, percusiones, espadas láser de la
 	[Guerra de las Galaxias](https://www.starwars.com/), etc.
 
 ### Orquestación usando el programa synth.
