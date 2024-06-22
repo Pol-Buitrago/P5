@@ -14,6 +14,7 @@ sources = [
 	'instruments/seno.cpp',
 	'instruments/percussive.cpp',
 	'effects/fuzz.cpp',
+	'instruments/senoFM.cpp'
 ]
 
 executable(

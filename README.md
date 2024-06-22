@@ -93,8 +93,173 @@ mediante búsqueda de los valores en una tabla.
 
 - Incluya, a continuación, el código del fichero `seno.cpp` con los métodos de la clase Seno.
 
-**(añadir el código cuando esté finalizado)**
 ```cpp
+#include <iostream>
+#include <math.h>
+#include "seno.h"
+#include "keyvalue.h"
+
+#include <stdlib.h>
+
+using namespace upc;
+using namespace std;
+
+InstrumentSeno::InstrumentSeno(const std::string &param)
+    : adsr(SamplingRate, param)
+{
+  bActive = false;
+  x.resize(BSIZE);
+
+  /*
+    You can use the class keyvalue to parse "param" and configure your instrument.
+    Take a Look at keyvalue.h
+  */
+  KeyValue kv(param);
+  int N;
+  if (!kv.to_int("N", N))
+    N = 40; // default value
+
+  /*additionally, we can add another parameter that dictates the mode of tbl values extractions where:
+
+    - 0 == no interpolation
+    - 1 == interpolation (first_value + second_value)/2
+  */
+
+  if (kv("I") != "false")
+    Interpolation = false; // default value
+  else
+  {
+    Interpolation = true;
+  }
+
+  /*we can also implemented seno instrument to be percussive (with exponential final decay)*/
+  if (kv("percussive") == "true")
+    percussive = true; // default value
+  else
+  {
+    percussive = false;
+  }
+
+  // Create a tbl with one period of a sinusoidal wave
+  tbl.resize(N);
+  float phase = 0, step = 2 * M_PI / (float)N;
+  index = 0;
+  for (int i = 0; i < N; ++i)
+  {
+    tbl[i] = sin(phase);
+    phase += step;
+  }
+}
+
+void InstrumentSeno::command(long cmd, long note, long vel)
+{
+  f0 = 440.0f * pow(2.0f, (note - 69.0f) / 12.0f); // convertion of NOTE to FREQ
+
+  if (cmd == 9)
+  { //'Key' pressed: attack begins
+    bActive = true;
+    adsr.start();
+    index = 0;
+    phas = 0.0f;
+    increment = ((f0 / SamplingRate) * tbl.size());
+    A = vel / 127.;
+    // A = std::clamp(static_cast<float>(vel) / 127.0f, 0.0f, 1.0f);
+  }
+  else if (cmd == 8)
+  { //'Key' released: sustain ends, release begins
+    adsr.stop();
+    end_hit = true;
+  }
+  else if (cmd == 0)
+  { // Sound extinguished without waiting for release to end
+    adsr.end();
+  }
+}
+
+const vector<float> &InstrumentSeno::synthesize()
+{
+  if (not adsr.active())
+  {
+    x.assign(x.size(), 0);
+    bActive = false;
+    return x;
+  }
+  else if (not bActive)
+    return x;
+
+  /*En general, al recorrer la tabla con los saltos adecuados para producir una cierta
+  frecuencia fundamental, será necesario acceder a índices no enteros de la tabla. Es
+  decir, el valor deseado no se corresponde con ninguno de los que están almacenados
+  en ella, sino a uno intermedio entre dos que sí lo están (que pueden ser el último y el
+  primero...).
+
+  ◦ En primera aproximación, puede redondear el índice requerido a entero y usar
+  para la muestra uno de los valores almacenados en la tabla. <-- LO QUE ESTAMOS USANDO AHORA
+
+  ⋄ Pero esta solución introduce una distorsión que es claramente audible.
+
+  ◦ Como trabajo de ampliación, se propone calcular el valor de la muestra como
+  interpolación lineal entre los valores inmediatamente anterior y posterior al índice
+  deseado (pero recuerde que el siguiente del último es el primero...)*/
+  for (unsigned int i = 0; i < x.size(); ++i)
+  {
+    phas += increment;
+    /*if percussive == true and note end has been hit*/
+    if (percussive && end_hit)
+    {
+      if (std::floor(phas) == phas || !Interpolation)
+      {
+        x[i] = A * tbl[round(phas)] * pow(0.99935, (int)interrupted_index);
+        interrupted_index++;
+      }
+      else // phas is a non intger, we must interpolate
+      {
+        x[i] = A * getInterpolatedValue(phas) * pow(0.99935, (int)interrupted_index);
+        interrupted_index++;
+      }
+    }
+    else
+    {
+      if (std::floor(phas) == phas || !Interpolation)
+      {
+        x[i] = A * tbl[round(phas)];
+      }
+      else // phas is a non intger, we must interpolate
+      {
+        x[i] = A * getInterpolatedValue(phas);
+      }
+    }
+    while (phas >= tbl.size())
+      phas = phas - tbl.size();
+  }
+  adsr(x); // apply envelope to x and update internal status of ADSR
+
+  return x;
+}
+
+/*en caso de quer realizar la ampliación como dice arriba, podemos realizar la interpolación
+   de la siguiente manera:*/
+
+float InstrumentSeno::getInterpolatedValue(const float phas)
+{
+
+  int tbl_size = tbl.size();
+  size_t lowerIndex = static_cast<size_t>(std::floor(phas));
+  size_t upperIndex = static_cast<size_t>(std::ceil(phas));
+
+  // Boundary conditions for lowerIndex and upperIndex
+  if (lowerIndex >= tbl_size || upperIndex >= tbl_size)
+  {
+    lowerIndex = tbl_size - 1;
+    upperIndex = 0;
+  }
+
+  // Interpolate between tbl[lowerIndex] and tbl[upperIndex]
+  float lowerValue = tbl[lowerIndex];
+  float upperValue = tbl[upperIndex];
+
+  return (lowerValue + upperValue) / 2;
+}
 
 ```
 - Explique qué método se ha seguido para asignar un valor a la señal a partir de los contenidos en la tabla, e incluya una gráfica en la que se vean claramente (use pelotitas en lugar de líneas) los valores de la tabla y los de la señal generada.
@@ -467,9 +632,110 @@ synth -e work/effects.orc work/seno.orc work/doremi.sco work/audio_con_fuzz.wav
 Construya un instrumento de síntesis FM, según las explicaciones contenidas en el enunciado y el artículo
 de [John M. Chowning](https://web.eecs.umich.edu/~fessler/course/100/misc/chowning-73-tso.pdf). El instrumento usará como parámetros **básicos** los números `N1` y `N2`, y el índice de modulación `I`, que deberá venir expresado en semitonos.
 
+*Para construir un instrumento de síntesis FM según las especificaciones dadas, vamos a seguir el enfoque basado en la fórmula de frecuencia modulada (FM) propuesta por John M. Chowning. Utilizaremos los parámetros básicos `N1`, `N2` e `I` (índice de modulación expresado en semitonos) para generar varios tipos de sonidos, incluyendo un vibrato y sonidos tipo clarinete y campana. Además, generaremos escalas diatónicas con estos sonidos y guardaremos los resultados en archivos de audio.*
+
 - Use el instrumento para generar un vibrato de *parámetros razonables* e incluya una gráfica en la que se vea, claramente, la correspondencia entre los valores `N1`, `N2` e `I` con la señal obtenida.
 
+### Implementación del Instrumento de Síntesis FM
+
+## Fórmula de Síntesis FM
+
+La fórmula para la síntesis de frecuencia modulada (FM) se define como:
+
+x(t) = A * sin(2π * (N1 * fc + N2 * fc * sin(2π * I * t / SamplingRate)))
+
+Donde:
+- x(t) es la señal de salida en el tiempo t.
+- A es la amplitud máxima de la señal.
+- N1 y N2 son parámetros de frecuencia.
+- fc es la frecuencia de la nota.
+- I es el índice de modulación en semitonos.
+- t es el tiempo en segundos.
+- SamplingRate es la frecuencia de muestreo.
+
+
+#### Implementación en C++
+
+```cpp
+...
+```
+
 - Use el instrumento para generar un sonido tipo clarinete y otro tipo campana. Tome los parámetros del sonido (N1, N2 e I) y de la envolvente ADSR del citado artículo. Con estos sonidos, genere sendas escalas diatónicas (fichero `doremi.sco`) y ponga el resultado en los ficheros `work/doremi/clarinete.wav` y `work/doremi/campana.work`.
+
+### Generación de Sonidos y Escalas Diatónicas
+
+Para generar el vibrato y los sonidos tipo clarinete y campana, utilizaremos los parámetros especificados en el artículo de Chowning para cada tipo de sonido, incluyendo las envolventes ADSR adecuadas.
+
+### Archivos de Escalas Diatónicas
+
+Una vez generados los sonidos, generaremos escalas diatónicas utilizando el archivo `doremi.sco` y los sonidos especificados:
+
+#### Archivo `doremi.sco` para Clarinete
+
+```plaintext
+Escala diatónica de Do mayor usando sonido tipo clarinete
+0	9	1	60	100	; Onset del sonido
+0	12	1	10	1	; Parámetros del instrumento (Clarinete)
+1	12	1	10	0	; Fin de la nota
+1	9	1	62	100
+1	12	1	10	1
+2	12	1	10	0
+2	9	1	64	100
+2	12	1	10	1
+3	12	1	10	0
+3	9	1	65	100
+3	12	1	10	1
+4	12	1	10	0
+4	9	1	67	100
+4	12	1	10	1
+5	12	1	10	0
+5	9	1	69	100
+5	12	1	10	1
+6	12	1	10	0
+6	9	1	71	100
+6	12	1	10	1
+7	12	1	10	0
+7	9	1	72	100
+7	12	1	10	1
+```
+
+#### Archivo `doremi.sco` para Campana
+
+```plaintext
+Escala diatónica de Do mayor usando sonido tipo campana
+0	9	1	60	100	; Onset del sonido
+0	12	1	20	1	; Parámetros del instrumento (Campana)
+1	12	1	20	0	; Fin de la nota
+1	9	1	62	100
+1	12	1	20	1
+2	12	1	20	0
+2	9	1	64	100
+2	12	1	20	1
+3	12	1	20	0
+3	9	1	65	100
+3	12	1	20	1
+4	12	1	20	0
+4	9	1	67	100
+4	12	1	20	1
+5	12	1	20	0
+5	9	1	69	100
+5	12	1	20	1
+6	12	1	20	0
+6	9	1	71	100
+6	12	1	20	1
+7	12	1	20	0
+7	9	1	72	100
+7	12	1	20	1
+```
+
+### Generación de Archivos de Audio
+
+Una vez definidos los archivos `doremi.sco` con las escalas diatónicas, podemos usar el programa `synth` para generar los archivos de audio `clarinete.wav` y `campana.wav`:
+
+```bash
+synth work/clarinete.orc work/doremi_clarinete.sco work/clarinete.wav
+synth work/campana.orc work/doremi_campana.sco work/campana.wav
+```
 
   * También puede colgar en el directorio work/doremi otras escalas usando sonidos *interesantes*. Por ejemplo, violines, pianos, percusiones, espadas láser de la
 	[Guerra de las Galaxias](https://www.starwars.com/), etc.

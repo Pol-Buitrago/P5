@@ -14,9 +14,9 @@ sampling_rate, audio_data = wavfile.read(file_path)
 
 # Definir parámetros de la envolvente ADSR
 attack_time = 0.1   # Tiempo de ataque en segundos
-decay_time = 0.1    # Tiempo de decaimiento en segundos
-sustain_time = 0.3  # Tiempo de sustain en segundos
-release_time = 0.15  # Tiempo de liberación en segundos
+decay_time = 0.01     # Tiempo de decaimiento en segundos
+sustain_time = 0.4  # Tiempo de sustain en segundos
+release_time = 0.5   # Tiempo de liberación en segundos
 
 # Calcular duración total del audio
 total_samples = len(audio_data)
@@ -42,23 +42,18 @@ note_data = audio_data[note_start_sample:note_end_sample]
 
 attack_data = note_data[:attack_samples]
 decay_data = note_data[attack_samples:attack_samples + decay_samples]
-sustain_data = note_data[attack_samples + decay_samples:
-                         attack_samples + decay_samples + sustain_samples]
+sustain_data = note_data[attack_samples +
+                         decay_samples:attack_samples + decay_samples + sustain_samples]
 release_data = note_data[-release_samples:]
 
-# Unir los segmentos antes y después del sustain
-note_data_no_sustain = np.concatenate((attack_data, decay_data, release_data))
-
-# Calcular el eje de tiempo para la envolvente ADSR sin sustain
-time_axis_no_sustain = np.linspace(0, len(note_data_no_sustain) / sampling_rate,
-                                   len(note_data_no_sustain))
-
-# Graficar la envolvente ADSR sin el segmento de sustain
-plt.plot(time_axis_no_sustain[:attack_samples],
+# Graficar la envolvente ADSR
+plt.plot(time_axis[note_start_sample:note_start_sample + attack_samples],
          attack_data, color='tab:red', label='Attack', linewidth=0.8)
-plt.plot(time_axis_no_sustain[attack_samples:attack_samples + decay_samples],
-         decay_data, color='tab:orange', label='Decay', linewidth=0.8)
-plt.plot(time_axis_no_sustain[attack_samples + decay_samples:],
+plt.plot(time_axis[note_start_sample + attack_samples:note_start_sample + attack_samples +
+         decay_samples], decay_data, color='tab:orange', label='Decay', linewidth=0.8)
+plt.plot(time_axis[note_start_sample + attack_samples + decay_samples:note_end_sample -
+         release_samples], sustain_data, color='tab:green', label='Sustain', linewidth=0.8)
+plt.plot(time_axis[note_end_sample - release_samples:note_end_sample],
          release_data, color='tab:purple', label='Release', linewidth=0.8)
 
 # Detalles de la gráfica
