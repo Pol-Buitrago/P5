@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <math.h>
 #include "senoFM.h"
@@ -10,6 +9,7 @@
 using namespace upc;
 using namespace std;
 
+// Constructor initializes the ADSR envelope and sets default parameters.
 SenoFM::SenoFM(const std::string &param)
     : adsr(SamplingRate, param)
 {
@@ -17,45 +17,53 @@ SenoFM::SenoFM(const std::string &param)
     x.resize(BSIZE);
 
     /*
-      You can use the class keyvalue to parse "param" and configure your instrument.
-      Take a Look at keyvalue.h
+      Use KeyValue class to parse 'param' and configure instrument parameters.
+      Refer to keyvalue.h for details.
     */
     KeyValue kv(param);
-    if (!kv.to_int("N", N))
-        N = 40; // default value
 
-    // signal amplitude adsr
+    // Default value if 'N' is not specified in 'param'.
+    if (!kv.to_int("N", N))
+        N = 40;
+
+    // Attack, Decay, Sustain, Release parameters for ADSR envelope.
     if (!kv.to_float("ADSR_A", adsr_a))
-        adsr_a = 0.1; //"Attack" adsr parameter
+        adsr_a = 0.1;
 
     if (!kv.to_float("ADSR_D", adsr_d))
-        adsr_d = 0.05; //"Decay" adsr parameter
+        adsr_d = 0.05;
 
     if (!kv.to_float("ADSR_S", adsr_s))
-        adsr_s = 0.5; //"Sustain" adsr parameter
+        adsr_s = 0.5;
 
     if (!kv.to_float("ADSR_R", adsr_r))
-        adsr_r = 0.1; //"Release" adsr parameter
+        adsr_r = 0.1;
 
+    // Maximum level of the signal.
     if (!kv.to_float("max_level", max_level))
-        max_level = 0.02; // maximum level of the signal
+        max_level = 0.02;
 
+    // Modulation index 1.
     if (!kv.to_float("I1", I1))
-        I1 = 1; // modulation index 1
+        I1 = 1;
 
+    // Default values for N1 and N2.
     if (!kv.to_float("N1", N1))
-        N1 = 1; // default N1 value
+        N1 = 1;
 
     if (!kv.to_float("N2", N2))
-        N2 = 1; // default N2 value
+        N2 = 1;
 
+    // Default setting for additional parameters.
     if (!kv.to_float("setting", setting))
-        setting = 0; // default setting (standard adsr == 0, exp >0, string adsr ==-1)
+        setting = 0;
 
+    // Configure ADSR envelope based on 'setting'.
     if (setting == -1)
     {
         adsr.set(adsr_a, 0, adsr_s, adsr_r, 1.5F);
     }
+
     mod_phase = 0;
     index_sen = 0;
 
@@ -71,25 +79,26 @@ SenoFM::SenoFM(const std::string &param)
     }
 }
 
+// Process commands to start, sustain, or release a note.
 void SenoFM::command(long cmd, long note, long vel)
 {
     if (cmd == 9)
-    { //'Key' pressed: attack begins
+    { //'Key' pressed: trigger attack phase
         bActive = true;
         adsr.start();
-        float f0note = pow(2, ((float)note - 69) / 12) * 440; // convert note in semitones to frequency (Hz)
-        Nnote = 1 / f0note * SamplingRate;                    // obtain note period in samples
-        index_step = (float)N / Nnote;                        // obtain step (relationship between table period and note period)
+        float f0note = pow(2, ((float)note - 69) / 12) * 440; // Convert note to frequency (Hz)
+        Nnote = 1 / f0note * SamplingRate; // Note period in samples
+        index_step = (float)N / Nnote; // Table step per note period
 
-        // reset counters/phase
+        // Reset counters/phases
         index = 0;
         index_sen = 0;
         mod_phase = 0;
         decay_count = 0;
         decay_count_I = 0;
 
-        fm = f0note * N2 / N1;                         // modulating frequency
-        mod_phase_step = 2 * M_PI * fm / SamplingRate; // step of the modulating sine I*sin(2*pi*fm/SamplingRate)
+        fm = f0note * N2 / N1; // Modulating frequency
+        mod_phase_step = 2 * M_PI * fm / SamplingRate; // Step of the modulating sine wave
 
         note_int = round(Nnote);
         x_tm.resize(note_int);
@@ -100,17 +109,18 @@ void SenoFM::command(long cmd, long note, long vel)
         A = vel / 127.;
     }
     else if (cmd == 8)
-    { //'Key' released: sustain ends, release begins
+    { //'Key' released: trigger release phase
         adsr.stop();
     }
     else if (cmd == 0)
     {
-        // release faster, but don't end it abruptly
+        // Faster release, ensuring smooth transition
         adsr.set(adsr_s, adsr_a, adsr_d, adsr_r / 4, 1.5F);
         adsr.stop();
     }
 }
 
+// Synthesize the waveform using FM synthesis with ADSR envelope modulation.
 const vector<float> &SenoFM::synthesize()
 {
     if (not adsr.active())
@@ -122,16 +132,16 @@ const vector<float> &SenoFM::synthesize()
     else if (not bActive)
         return x;
 
-    unsigned int index_floor, next_index; // interpolation indexes
-    float weight, weight_fm;              // interpolation weights
-    int index_floor_fm, next_index_fm;    // frequency interpolation weights
-    std::vector<float> I_array(x.size()); // I is now a function of t
+    unsigned int index_floor, next_index; // Interpolation indexes
+    float weight, weight_fm; // Interpolation weights
+    int index_floor_fm, next_index_fm; // Frequency interpolation indexes
+    std::vector<float> I_array(x.size()); // Array for modulation index I
 
-    // fill array with the user-input I value (constant)
+    // Initialize I_array with user-input modulation index (constant)
     for (unsigned int i = 0; i < x.size(); i++)
     {
         I_array[i] = (I2 - I1);
-        // apply exponential envelope if selected
+        // Apply exponential envelope if selected
         if (setting > 0)
             I_array[i] = I_array[i] * pow(setting, decay_count_I);
     }
@@ -141,19 +151,19 @@ const vector<float> &SenoFM::synthesize()
         I_array[i] = (I1 + I_array[i]);
     }
 
-    // fill x_tm with a period of the new signal
+    // Fill x_tm with one period of the new signal
     for (unsigned int i = 0; i < (unsigned int)note_int; ++i)
     {
 
-        // check if the floating point index is out of bounds
+        // Check if floating point index is out of bounds
         if ((long unsigned int)floor(index) > tbl.size() - 1)
             index = index - floor(index);
 
-        // Obtain the index as an integer
+        // Obtain integer index
         index_floor = (int)floor(index);
         weight = index - index_floor;
 
-        // fix interpolation indexes if needed
+        // Adjust interpolation indexes if necessary
         if (index_floor == (unsigned int)N - 1)
         {
             next_index = 0;
@@ -163,17 +173,16 @@ const vector<float> &SenoFM::synthesize()
         {
             next_index = index_floor + 1;
         }
-        // interpolate table values
-
+        // Interpolate table values
         x_tm[i] = ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
-        // update real index
+        // Update real index
         index = index + index_step;
     }
 
-    // modulate the signal
+    // Modulate the signal
     for (unsigned int i = 0; i < x.size(); ++i)
     {
-        // check if the floating point index is out of bounds
+        // Check if floating point index is out of bounds
         if (index_sen < 0)
         {
             index_sen = Nnote + index_sen;
@@ -183,11 +192,11 @@ const vector<float> &SenoFM::synthesize()
 
             index_sen = index_sen - (note_int - 1);
         }
-        // Obtain the index as an integer
+        // Obtain integer index
         index_floor_fm = floor(index_sen);
         weight_fm = index_sen - index_floor_fm;
 
-        // fix interpolation indexes if needed
+        // Adjust interpolation indexes if necessary
         if (index_floor_fm == note_int - 1)
         {
             next_index_fm = 0;
@@ -197,10 +206,10 @@ const vector<float> &SenoFM::synthesize()
         {
             next_index_fm = index_floor_fm + 1;
         }
-        // interpolate table values
+        // Interpolate table values
         x[i] = A * ((1 - weight_fm) * x_tm[index_floor_fm] + weight_fm * (x_tm[next_index_fm]));
 
-        // update real index (phase) and modulated phase
+        // Update real index (phase) and modulated phase
         index_sen = index_sen + 1 - I_array[i] * sin(mod_phase);
         mod_phase = mod_phase + mod_phase_step;
     }
@@ -208,26 +217,25 @@ const vector<float> &SenoFM::synthesize()
     while (mod_phase > M_PI)
         mod_phase -= 2 * M_PI;
 
-    // apply exponential or adsr envelope
-
+    // Apply exponential or ADSR envelope modulation
     for (unsigned int i = 0; i < x.size(); i++)
     {
         if (setting != 0)
         {
-            if (setting > 0) // decrease exponentially according to the setting
+            if (setting > 0) // Exponential decay based on 'setting'
             {
                 x[i] = x[i] * max_level * pow(setting, decay_count);
                 decay_count++;
             }
             else if (adsr.active() && setting == -1)
             {
-                x[i] = x[i] * adsr_s; // correct level so that the attack doesn't reach values over the sustain threshold
+                x[i] = x[i] * adsr_s; // Adjust level to prevent attack overshoot
             }
         }
         else
-            x[i] = x[i] * max_level; // correct max level so it doesn't saturate when overlapping multiple signals
+            x[i] = x[i] * max_level; // Adjust max level to prevent saturation with overlapping signals
     }
     if (setting <= 0)
-        adsr(x); // apply envelope to x and update internal status of ADSR
+        adsr(x); // Apply envelope to x and update ADSR internal state
     return x;
 }
