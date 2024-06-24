@@ -12,9 +12,9 @@ namespace upc
   class SenoFM : public upc::Instrument
   {
     EnvelopeADSR adsr; // ADSR envelope generator
-    float index, N1, N2, setting; // Parameters for frequency modulation
+    float index, N1, N2, envelope; // Parameters for frequency modulation
     int N, decay_count, decay_count_I, note_int; // Various counters and settings
-    float A, index_step, index_sen, Nnote, adsr_s, adsr_a, adsr_r, adsr_d, max_level; // Additional parameters
+    float A, index_step, index_sen, Nnote, adsr_s, adsr_a, adsr_r, adsr_d; // Additional parameters
     std::vector<float> tbl, x_tm; // Tables for waveform and temporary storage
     long double mod_phase, mod_phase_step; // Phases for modulation
     float fm, I1, I2; // Frequency modulation parameters

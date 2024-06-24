@@ -680,24 +680,195 @@ synth -e work/effects.orc work/seno.orc work/doremi.sco work/audio_con_fuzz.wav
 ***Constructor SenoFM()***
 
 ```cpp
-AFEGIR CODI CONSTRUCTOR
+SenoFMSimple::SenoFMSimple(const std::string &param)
+    : adsr(SamplingRate, param)
+{
+    bActive = false;
+    x.resize(BSIZE);
+
+    /*
+      Use KeyValue class to parse 'param' and configure instrument parameters.
+      Refer to keyvalue.h for details.
+    */
+    KeyValue kv(param);
+
+    // Default value if 'N' is not specified in 'param'.
+    if (!kv.to_int("N", N))
+        N = 40;
+
+    // Modulation index
+    if (!kv.to_float("I", I))
+        I = 1;
+
+    // Default values for N1 and N2.
+    if (!kv.to_float("N1", N1))
+        N1 = 1;
+
+    if (!kv.to_float("N2", N2))
+        N2 = 1;
+
+    // initialize default source & modulated table values
+    tbl_signal.resize(N);
+    tbl_modulation.resize(N);
+    float phase = 0, step = 2 * M_PI / (float)N;
+    for (int i = 0; i < N; ++i)
+    {
+        tbl_signal[i] = sin(phase);
+        tbl_modulation[i] = sin(phase);
+        phase += step;
+    }
+
+    // initialize table indexes to 0
+    modulation_table_index = 0;
+    signal_table_index = 0;
+}
 ```
 
 ***Command()***
 ```cpp
-AFEGIR CODI COMMAND()
+void SenoFMSimple::command(long cmd, long note, long vel)
+{
+    if (cmd == 9)
+    { //'Key' pressed: trigger attack phase
+        bActive = true;
+        adsr.start();
+
+        // computation of signal table index increments
+        float fc = pow(2, ((float)note - 69) / 12) * 440; // Convert note to frequency (Hz)
+        increment_signal_table = ((fc / SamplingRate) * tbl_signal.size());
+
+        // computation of modulation table index increments
+
+        // we know that fc = fm * (N1/N2) so fm = fc * (N2/N1)
+        float fm = fc * (N2 / N1);
+        increment_modulation_table = ((fm / SamplingRate) * tbl_signal.size());
+
+        if (vel > 127)
+            vel = 127;
+
+        A = vel / 127.;
+    }
+    else if (cmd == 8)
+    { //'Key' released: trigger release phase
+        adsr.stop();
+    }
+    else if (cmd == 0)
+    {
+        adsr.end();
+    }
+}
 ```
 
 ***Synthesize()***
 
 ```cpp
-AFEGIR CODI SYNTHESIZE()
+const vector<float> &SenoFMSimple::synthesize()
+{
+    if (not adsr.active())
+    {
+        x.assign(x.size(), 0);
+        bActive = false;
+        return x;
+    }
+    else if (not bActive)
+        return x;
+
+    // create intermediate float array with modulated signal values (interpolated)
+    std::vector<float> modulated_values; // create array and resize
+    modulated_values.resize(x.size());
+
+    // assign values
+    for (int i = 0; i < x.size(); i++)
+    {
+        bool condition = (modulation_table_index == int(modulation_table_index));
+        modulated_values[i] = condition ? tbl_modulation[modulation_table_index] : I * getInterpolatedValue(modulation_table_index, string("modulation_table"));
+        modulation_table_index += increment_modulation_table;
+        // control index bounds
+        if (modulation_table_index >= (float)tbl_modulation.size())
+        {
+            modulation_table_index -= (float)tbl_modulation.size();
+        }
+    }
+
+    // populate x array with signal values: x[i]= A * sin(index_signal_table + I * sin(index_modulation_table))
+    for (int i = 0; i < x.size(); i++)
+    {
+        float general_index;
+        // check wether signal_table_index is + or -
+        if (signal_table_index < 0)
+        {
+            general_index = signal_table_index + tbl_signal.size();
+        }
+        else
+        {
+            general_index = signal_table_index;
+        }
+        bool condition = (general_index == int(general_index));
+        x[i] = condition ? tbl_signal[general_index] : getInterpolatedValue(general_index, string("signal_table"));
+        signal_table_index += increment_signal_table + modulated_values[i];
+
+        // control index bounds
+        if (signal_table_index >= (float)tbl_signal.size())
+        {
+            signal_table_index -= (float)tbl_signal.size();
+        }
+    }
+    return x;
+}
 ```
+
+***getInterpolatedValue()***
+
+```cpp
+float SenoFMSimple::getInterpolatedValue(const float phas, string table)
+{
+    int tbl_size;
+    std::vector<float> *tbl;
+    if (table == "signal_table")
+    {
+        tbl_size = tbl_signal.size();
+        tbl = &tbl_signal;
+    }
+    else
+    {
+        tbl_size = tbl_modulation.size();
+        tbl = &tbl_modulation;
+    }
+
+    size_t lowerIndex = static_cast<size_t>(std::floor(phas));
+    size_t upperIndex = static_cast<size_t>(std::ceil(phas));
+
+    // Boundary conditions for lowerIndex and upperIndex
+    if (lowerIndex >= tbl_size || upperIndex >= tbl_size)
+    {
+        lowerIndex = tbl_size - 1;
+        upperIndex = 0;
+    }
+
+    // Interpolate between tbl[lowerIndex] and tbl[upperIndex]
+    float lowerValue = (*tbl)[lowerIndex];
+    float upperValue = (*tbl)[upperIndex];
+
+    // compute interpolation weights
+    float interval_length = upperIndex - lowerIndex;
+    float lower_index_weight = (upperIndex - phas) / interval_length;
+    float upper_index_weight = (phas - lowerIndex) / interval_length;
+
+    // computation of interpolated value
+    float interpolated_value = lower_index_weight * lowerValue + upper_index_weight * upperValue;
+
+    return interpolated_value;
+}
+```
+*Dicho método **getInterpolatedValue()** no es nada más que un método adicional que inteligentemente interpola entre valores de una tabla determinada.*
+
 *Ha sido a través de esta implementación que hemos podido generar nuestros primeros sonidos de generación FM natural. A continuación enseñamos algunas gráficas para ejemplificar visualmente la relación existente entre los parámetros básicos de cualquier instrumento de síntesis FM (N1, N2 e I):*
 
-POSAR GRAFICS DE FFT I SEMBLANT ALS DEL REPO ON ES VEGI LA RELACION ENTRE PARAMETRES
+![Comparación Espectro Clarinete con poca vs con más modulación](img/Note_1_FFT_Comparison.png)
 
-DEMOSTRAR MITJANCANT ELS GRAFICS QUE AMB VALORS SEMBLANTS AL VIBRATO (I=0.5, FM=10) LA FRECUENCIA CENTRAL PERD ENERGIA I TMB QUE AUGMENTANT ENCARA MÉS LA I I TMB VALORS DEL COCIENT N2/N1 FAN QUE FREC CENTRAL PERDI ENCARA NMES ENERGIA
+*Aquí se compara el espectro de 2 instrumentos de clarinete, uno con índice de modulación `I` y parámetro `N2` más bajos, que deberia proporcionar, teoricamente, menos energia para los harmónicos vs el instrumento pero con parámetros de modulación frecuencial más potentes (`I=3, N2=4`). Ambos instrumentos estan tocando la nota 60, que corresponde a unos 261 Hz, que es precisamente donde encontramos el pico mayor. La presencia de harmónicos, con más o menos potencia, es función ya de los demás parámetros.*
+
+*Como la FFT en **azul** corresponde a una baja modulación frecuencial (sus parámetros son pequeños en comparación con la otra modulacíon) resulta que más porcentaje de la energia espectral reside en dicho pico o frecuencia central, mientras que con el aumento del índice de modulación `I` ocurre una dispersión de la energía hacia otras bandas o regiones espectrales, dando lugar a mayor riqueza frecuencial y sonidos más espectaculares.  No se han podido graficar todos los harmónicos en esta única imagen, pero la cola de harmónicos extendería más lejos (el conocido tren de deltas) para los instrumentos con parámetros de modulación más fuertes, que en este caso resulta ser el instrumento cuya FFT está pintada en rojo.*
 
 - Use el instrumento para generar un sonido tipo clarinete y otro tipo campana. Tome los parámetros del sonido (N1, N2 e I) y de la envolvente ADSR del citado artículo. Con estos sonidos, genere sendas escalas diatónicas (fichero `doremi.sco`) y ponga el resultado en los ficheros `work/doremi/clarinete.wav` y `work/doremi/campana.work`.
 
@@ -711,17 +882,31 @@ DEMOSTRAR MITJANCANT ELS GRAFICS QUE AMB VALORS SEMBLANTS AL VIBRATO (I=0.5, FM=
 
 *Mediante esta implementación, seremos capaces de producir instrumentos con aún más riqueza espectral y que encima es dinámica y variante con el tiempo, mediante la varianza de las envolventes de la onda portadora y el índice de modulación `I`.*
 
-#### Generacíon Clarinete
+#### *Generacíon Clarinete*
 
-**
+*Para la generación del instrumento tipo Clarinete, que es un instrumento del tipo "woodwind", hay que usar valores de la frecuencia central múltiplos enteros de la frecuencia moduladora, es decir, obtener relaciones de N1/N2 del tipo 2/1, 3/1, etc. Nosotros usamos los siguientes parámetros:*
 
-#### Generación Campana
+##### *seno.sco* para clarinete
 
-### Archivos de Escalas Diatónicas
+```shell
+# Clarinete
+4	SenoFM	ADSR_A=0.13; ADSR_D=0.8; ADSR_S=0.3; ADSR_R=0.7; N=40; I=1; I1=0; I2=3; N2=1; N1=1; setting=0; 
+```
+
+#### *Generación Campana*
+
+*Para la generación del instrumento tipo campana, que es de la familia de instrumentos **percusivos**, entre muchas otras características, estos instrumentos presentan una envolvente del intervalo de **decaída** de tipo `exponencial` y es por eso que en el fichero `.sco` hemos subministrado dicho instrumento con un parámetro llamado `envelope`:*
+
+```shell
+# Campana
+3	SenoFM  ADSR_A=0.2; ADSR_D=0.1; ADSR_S=0.3; ADSR_R=0.3; N=40; I=1; I1=0; I2=1.5; N2=15; N1=1; envelope=0.9999; 
+```
+
+### *Archivos de Escalas Diatónicas*
 
 Una vez generados los sonidos, generaremos escalas diatónicas utilizando el archivo `doremi.sco` y los sonidos especificados:
 
-#### Archivo `doremi.sco` para Clarinete
+#### *Archivo `doremi.sco` para Clarinete*
 
 ```plaintext
 Escala diatónica de Do mayor usando sonido tipo clarinete
@@ -750,7 +935,7 @@ Escala diatónica de Do mayor usando sonido tipo clarinete
 7	12	1	10	1
 ```
 
-#### Archivo `doremi.sco` para Campana
+#### *Archivo `doremi.sco` para Campana*
 
 ```plaintext
 Escala diatónica de Do mayor usando sonido tipo campana
@@ -779,7 +964,7 @@ Escala diatónica de Do mayor usando sonido tipo campana
 7	12	1	20	1
 ```
 
-### Generación de Archivos de Audio
+### *Generación de Archivos de Audio*
 
 Una vez definidos los archivos `doremi.sco` con las escalas diatónicas, podemos usar el programa `synth` para generar los archivos de audio `clarinete.wav` y `campana.wav`:
 

@@ -39,10 +39,6 @@ SenoFM::SenoFM(const std::string &param)
     if (!kv.to_float("ADSR_R", adsr_r))
         adsr_r = 0.1;
 
-    // Maximum level of the signal.
-    if (!kv.to_float("max_level", max_level))
-        max_level = 0.02;
-
     // Modulation index 1.
     if (!kv.to_float("I1", I1))
         I1 = 1;
@@ -54,12 +50,12 @@ SenoFM::SenoFM(const std::string &param)
     if (!kv.to_float("N2", N2))
         N2 = 1;
 
-    // Default setting for additional parameters.
-    if (!kv.to_float("setting", setting))
-        setting = 0;
+    // Default envelope for additional parameters.
+    if (!kv.to_float("envelope", envelope))
+        envelope = 0;
 
-    // Configure ADSR envelope based on 'setting'.
-    if (setting == -1)
+    // Configure ADSR envelope based on 'envelope'.
+    if (envelope == -1)
     {
         adsr.set(adsr_a, 0, adsr_s, adsr_r, 1.5F);
     }
@@ -142,8 +138,8 @@ const vector<float> &SenoFM::synthesize()
     {
         I_array[i] = I2;
         // Apply exponential envelope if selected
-        if (setting > 0)
-            I_array[i] = I_array[i] * pow(setting, decay_count_I);
+        if (envelope > 0)
+            I_array[i] = I_array[i] * pow(envelope, decay_count_I);
     }
 
     // Fill x_tm with one period of the new signal
@@ -215,22 +211,20 @@ const vector<float> &SenoFM::synthesize()
     // Apply exponential or ADSR envelope modulation
     for (unsigned int i = 0; i < x.size(); i++)
     {
-        if (setting != 0)
+        if (envelope != 0)
         {
-            if (setting > 0) // Exponential decay based on 'setting'
+            if (envelope > 0) // Exponential decay based on 'envelope'
             {
-                x[i] = x[i] * max_level * pow(setting, decay_count);
+                x[i] = x[i] * pow(envelope, decay_count);
                 decay_count++;
             }
-            else if (adsr.active() && setting == -1)
+            else if (adsr.active() && envelope == -1)
             {
                 x[i] = x[i] * adsr_s; // Adjust level to prevent attack overshoot
             }
         }
-        else
-            x[i] = x[i] * max_level; // Adjust max level to prevent saturation with overlapping signals
     }
-    if (setting <= 0)
+    if (envelope <= 0)
         adsr(x); // Apply envelope to x and update ADSR internal state
     return x;
 }
