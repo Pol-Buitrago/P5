@@ -1,7 +1,7 @@
 #Time; On (8)/Off (9); Channel; Note; Velocity;
 #Time; Control; Channel; Effect; On/Off;
-0	9	1	60	100
-120	8	1	60	100
+0	9	1	40	100
+120	8	1	40	100
 40	9	1	62	100
 120	8	1	62	100
 40	9	1	64	100
