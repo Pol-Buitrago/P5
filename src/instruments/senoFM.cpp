@@ -87,8 +87,8 @@ void SenoFM::command(long cmd, long note, long vel)
         bActive = true;
         adsr.start();
         float f0note = pow(2, ((float)note - 69) / 12) * 440; // Convert note to frequency (Hz)
-        Nnote = 1 / f0note * SamplingRate; // Note period in samples
-        index_step = (float)N / Nnote; // Table step per note period
+        Nnote = 1 / f0note * SamplingRate;                    // Note period in samples
+        index_step = (float)N / Nnote;                        // Table step per note period
 
         // Reset counters/phases
         index = 0;
@@ -97,7 +97,7 @@ void SenoFM::command(long cmd, long note, long vel)
         decay_count = 0;
         decay_count_I = 0;
 
-        fm = f0note * N2 / N1; // Modulating frequency
+        fm = f0note * N2 / N1;                         // Modulating frequency
         mod_phase_step = 2 * M_PI * fm / SamplingRate; // Step of the modulating sine wave
 
         note_int = round(Nnote);
@@ -133,22 +133,17 @@ const vector<float> &SenoFM::synthesize()
         return x;
 
     unsigned int index_floor, next_index; // Interpolation indexes
-    float weight, weight_fm; // Interpolation weights
-    int index_floor_fm, next_index_fm; // Frequency interpolation indexes
+    float weight, weight_fm;              // Interpolation weights
+    int index_floor_fm, next_index_fm;    // Frequency interpolation indexes
     std::vector<float> I_array(x.size()); // Array for modulation index I
 
     // Initialize I_array with user-input modulation index (constant)
     for (unsigned int i = 0; i < x.size(); i++)
     {
-        I_array[i] = (I2 - I1);
+        I_array[i] = I2;
         // Apply exponential envelope if selected
         if (setting > 0)
             I_array[i] = I_array[i] * pow(setting, decay_count_I);
-    }
-
-    for (unsigned int i = 0; i < x.size(); i++)
-    {
-        I_array[i] = (I1 + I_array[i]);
     }
 
     // Fill x_tm with one period of the new signal

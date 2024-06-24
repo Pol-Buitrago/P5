@@ -24,72 +24,70 @@ ejercicios indicados.
 
 ### Envolvente ADSR.
 
-Tomando como modelo un instrumento sencillo (puede usar el InstrumentDumb), genere cuatro instrumentos que
-permitan visualizar el funcionamiento de la curva ADSR.
+Tomando como modelo un instrumento sencillo (puede usar el InstrumentDumb), genere cuatro instrumentos que permitan visualizar el funcionamiento de la curva ADSR.
 
-* Un instrumento con una envolvente ADSR genérica, para el que se aprecie con claridad cada uno de sus
-  parámetros: ataque (A), caída (D), mantenimiento (S) y liberación (R).
+* Un instrumento con una envolvente ADSR genérica, para el que se aprecie con claridad cada uno de sus parámetros: ataque (A), caída (D), mantenimiento (S) y liberación (R).
 
-  - *Podemos observar una ADSR genérica, con un ataque del 10% de duración, una caída del 20%, un mantenimiento del 50% y una liberación final del 20%.* 
+  - *Podemos observar una ADSR genérica, con un ataque del 10% de duración, una caída del 20%, un mantenimiento del 50% y una liberación final del 20% (porcentajes relativos a un intervalo de tiempo determinado).* 
 
   ![gráfica de una ADSR genérica](img/ADSR_generica.png)
   
-  - A continuación, se muestra un ejemplo específico utilizando el instrumento `seno` y la primera nota "do" del archivo `doremi.sco`. El archivo de audio resultante se llama `seno.wav`. El comando utilizado para generar el archivo de audio es:
+  - *A continuación, se muestra un ejemplo específico utilizando el instrumento `seno` (con los parámetros de la envolvente ADSR anteriores) para la generación de la primera nota "do" del archivo `doremi.sco`. El archivo de audio resultante se llama `seno.wav`. El comando utilizado para generar el archivo de audio es:*
 
     ```sh
     synth seno.orc doremi.sco seno.wav
     ```
 
-    La gráfica a continuación ilustra las fases de Ataque (A), Decaimiento (D), Mantenimiento (S) y Liberación (R) de la señal de audio generada:
+    *La gráfica a continuación ilustra las fases de Ataque (A), Decaimiento (D), Mantenimiento (S) y Liberación (R) de la señal de audio generada:*
 
     ![ADSR Curve](img/ADSR_doremi_seno.png)
 
-    En esta gráfica, podemos observar claramente cómo la envolvente ADSR se aplica a una nota específica del instrumento `seno`.
+    *En esta gráfica, podemos observar claramente cómo la envolvente ADSR se aplica a una nota específica del instrumento `seno`.*
 
-* Un instrumento *percusivo*, como una guitarra o un piano, en el que el sonido tenga un ataque rápido, no
-  haya mantenimiemto y el sonido se apague lentamente.
+* Un instrumento *percusivo*, como una guitarra o un piano, en el que el sonido tenga un ataque rápido, no haya mantenimiemto y el sonido se apague lentamente.
+
   - Para un instrumento de este tipo, tenemos dos situaciones posibles:
+
     * El intérprete mantiene la nota *pulsada* hasta su completa extinción.
 
       - *podemos observar como no hay existencia (almenos apreciable) de la región de mantenimiento, y la caída hacia 0 del instrumento se compone de una decaída progresiva y gradual.*
 
       ![gráfica de una ADSR percusiva (1)](img/ADSR_percusivo1.png)
 
+      *La generación de la forma de onda con dichos parámetros propios de un instrumento percusivo con dichas características se volvió a realizar con el programa `synth`, de las misma forma que se hizo con el primer instrumento. Se volvió a usar la primera nota **do** de la orquestación `DoReMi`.*
+
       ![ADSR Curve](img/ADSR_doremi_percussive1.png)
 
-    * El intérprete da por finalizada la nota antes de su completa extinción, iniciándose una disminución
-	  abrupta del sonido hasta su finalización.
+    * El intérprete da por finalizada la nota antes de su completa extinción, iniciándose una disminución abrupta del sonido hasta su finalización.
 
-      - *ahora el tramo de liberación debe suponer una mayor extensión, debido a que, como dice el enunciado, el intérprete ha dado por finalizada la nota "antes de tiempo".*
+      - *Ahora el tramo de liberación debe suponer una mayor extensión, debido a que, como dice el enunciado, el intérprete ha dado por finalizada la nota "antes de tiempo".*
 
       ![gráfica de una ADSR percusiva (2)](img/ADSR_percusivo2.png)
+
+      *La representación de la forma de onda para este tipo de ADSR se visualiza imediatamente abajo, donde la decaída del instrumento debido a la finalización por el intérprete se representa con una pérdida de envolvente de carácter exponencial:*
 
       ![ADSR Curve](img/ADSR_doremi_percussive2.png)
 
   - Debera representar en esta memoria **ambos** posibles finales de la nota.
-* Un instrumento *plano*, como los de cuerdas frotadas (violines y semejantes) o algunos de viento. En
-  ellos, el ataque es relativamente rápido hasta alcanzar el nivel de mantenimiento (sin sobrecarga), y la
-  liberación también es bastante rápida.
+
+* Un instrumento *plano*, como los de cuerdas frotadas (violines y semejantes) o algunos de viento. En ellos, el ataque es relativamente rápido hasta alcanzar el nivel de mantenimiento (sin sobrecarga), y la liberación también es bastante rápida.
 
   - *podemos ver como el ADSR descrito abajo cumple con las condiciones de dicho tipo de instrumento:*
 
-  ![gráfica de una ADSR plana](img/ADSR_plano.png)CAMBIAR GRAFICA PQ NO TINGUI CAÍDA
+  ![gráfica de una ADSR plana](img/ADSR_plano.png)
+
+  *Y como siempre, la ejecución de la orquestación `DoReMi` mediante el programa `synth` con un instrumento seno del tipo "plano" puede verse a continuación (como siempre, solo se representa la primer nota de la orquestación, el `do`).*
 
   ![ADSR Curve](img/ADSR_doremi_plano.png)
 
-
-
-Para los cuatro casos, deberá incluir una gráfica en la que se visualice claramente la curva ADSR. Deberá
-añadir la información necesaria para su correcta interpretación, aunque esa información puede reducirse a
-colocar etiquetas y títulos adecuados en la propia gráfica (se valorará positivamente esta alternativa).
+Para los cuatro casos, deberá incluir una gráfica en la que se visualice claramente la curva ADSR. Deberá añadir la información necesaria para su correcta interpretación, aunque esa información puede reducirse a colocar etiquetas y títulos adecuados en la propia gráfica (se valorará positivamente esta alternativa).
 
 ---
 ---
 
 ### Instrumentos Dumb y Seno.
 
-Implemente el instrumento `Seno` tomando como modelo el `InstrumentDumb`. La señal **deberá** formarse
-mediante búsqueda de los valores en una tabla.
+Implemente el instrumento `Seno` tomando como modelo el `InstrumentDumb`. La señal **deberá** formarse mediante búsqueda de los valores en una tabla.
 
 - Incluya, a continuación, el código del fichero `seno.cpp` con los métodos de la clase Seno.
 
@@ -244,6 +242,7 @@ float InstrumentSeno::getInterpolatedValue(const float phas)
 {
 
   int tbl_size = tbl.size();
+  // static_cast/size_t types for multi-platform compatibility
   size_t lowerIndex = static_cast<size_t>(std::floor(phas));
   size_t upperIndex = static_cast<size_t>(std::ceil(phas));
 
@@ -264,9 +263,9 @@ float InstrumentSeno::getInterpolatedValue(const float phas)
 ```
 - Explique qué método se ha seguido para asignar un valor a la señal a partir de los contenidos en la tabla, e incluya una gráfica en la que se vean claramente (use pelotitas en lugar de líneas) los valores de la tabla y los de la señal generada.
 
-  *Como se ve en el for() del constructor de la clase **InstrumentSeno**, la tabla se construye en base a un periodo entero de una señal senoidal como cualquier otra, en incrementos que van en función del número de muestras que deseamos tener dentro de la tabla, es decir, como más puntos almacenemos, más pequeños serán los incrementos y por lo tanto tendremos el equivalente de un periodo de senoide almacenado en la tabla muestreado con frecuencia de muestreo más alta.*
+  *Como se ve en el `for()` del constructor de la clase **InstrumentSeno**, la tabla se construye en base a un periodo entero de una señal senoidal como cualquier otra, en incrementos que van en función del número de muestras que deseamos tener dentro de la tabla, es decir, como más puntos almacenemos, más pequeños serán los incrementos y por lo tanto tendremos el equivalente de un periodo de senoide almacenado en la tabla muestreado con frecuencia de muestreo más alta.*
 
-  *Cuando los valores estén ya dentro de la tabla, la recorremos con una velocidad determinada, cosa que viene dada por la frecuencia fundamental del propia instrumento seno mediante la conversión de nota a f0:*
+  *Cuando los valores estén ya dentro de la tabla, la recorremos con una velocidad determinada, cosa que viene dada por la frecuencia fundamental del propio instrumento seno mediante la conversión de **note** (valor determinado por el fichero `.sco`) a f0:*
 
   ```cpp
   f0 = 440.0f * pow(2.0f, (note - 69.0f) / 12.0f);
@@ -294,7 +293,7 @@ float InstrumentSeno::getInterpolatedValue(const float phas)
 
   ![gráfico de muestras de la tabla vs señal construido](img/SR:20_noInterpolation.png)
 
-*Hasta ahora la recogida de valores desde `tbl[n]` se ha heco de forma exacta, es decir, no hay ambiguedad sobre que valores de la tabla escoger, ya que los incrementos eran enteros (en el primer caso de f0 = SamplingRate/40, el incremento era de 1 en 1 mientras que en el segundo caso el incremento era el doble, 2). También nos gustaría enseñar lo que sucedería cuando dichos incrementos no son tan perfectos, y nos encontramos en la situación de tener que coger valores de la tabla intermedios, por ejemplo, si incremento = 1.5, los valores a los que accederíamos en `tbl[n]` serian `tbl[0], tbl[1.5], tbl[3], tbl[4.5]...`. Se han implementado 2 soluciones para redimirlo:*
+*Hasta ahora la recogida de valores desde `tbl[n]` se ha heco de forma exacta, es decir, no hay ambiguedad sobre que valores de la tabla escoger, ya que los incrementos eran enteros (en el primer caso de f0 = SamplingRate/40, el incremento era de 1 en 1 mientras que en el segundo caso el incremento era el doble, 2). También nos gustaría enseñar lo que sucedería cuando dichos incrementos no son tan perfectos, y nos encontramos en la situación de tener que coger valores de la tabla intermedios, por ejemplo, si incremento = 1.5, los valores a los que accederíamos en `tbl[n]` serian `tbl[0], tbl[1.5], tbl[3], tbl[4.5]...`. Se han implementado 2 soluciones para redimiarlo:*
 
 * *Aproximación del índice decimal al entero más próximo e.g. 4.5 -> 5 o 3.4 = 3. Llamámosle el caso **1**.*
 
@@ -314,6 +313,11 @@ x[i] = A * tbl[round(phas)];
 ![gráfica de tbl[n] vs 2 señales de 2 notas distintas, sin interpolación](img/Note69vs73.png)
 *Notar que x[n] es la senoide de la nota 69 mientras que y[n] es de la nota 73.*
 
+*En cuanto al **caso 2**, su implementación se realizó para evitar los sucesos que suceden con el caso 1, donde hay muestras sucesivas repetidas, por falta de dicha interpolación. Vamos a enseñar una figura donde hay 2 gráifcas emparejadas, la de arriba representando el máximo de una forma de onda de un instrumento tipo seno con interpolación activado y la de abajo representando el mismo instrumento pero con interpolación desactivada:*
+
+![Gráficas Seno Con Interpolación vs Sin Interpolación](img/seno_vibrato_normal_conInterpolacion.png)
+
+*No es difícil de argumentar a favor del método con interpolación activado, el cual es claramente superior en todos los casos, por lo tanto se aconseja que para cualquier síntesis de instrumento se aplique dicho instrumento con interpolación activada. Nosotros nos hemos asegurado de aplicar interpolación a cada uno de nuestros instrumentos por defecto, ya que es el método claramente superior.*
 
 
 - Si ha implementado la síntesis por tabla almacenada en fichero externo, incluya a continuación el código
@@ -359,6 +363,8 @@ void InstrumentSeno::command(long cmd, long note, long vel) {
 ## *Trémolo*
 
 *Para la demostración del efecto del trémolo vamos a hacer una comparativa entre la aplicación de dicho efecto con unos parámetros más "normales" o cómodos (A=0.15 y fm=10Hz) y otra con parámetros más "agresivos" (A=1.5 y fm=10Hz). A continuacíon enseñamos el proceso de obtención de una nota bajo el efecto del trémolo y su clara apariencia en la representación gráifca del señal. Empezemos por el trémolo con parámetros "normales":*
+
+## *Tremolo Normal*
 
 *Primero se partió de los siguientes ficheros para generar el `.wav` de donde extraeríamos la señal a analizar:*
 
@@ -422,7 +428,7 @@ synth -e effects.orc seno.orc doremi.sco seno_tremolo_normal.wav
 
 *El fichero de audio de salida (`.wav`) del do-re-mi con éste trémolo de baja potencia aplicado se halla, como todos los ficheros de audio, en el directorio `work/` y se llama **seno_tremolo_normala.wav**.*
 
-## *Trémolo Agresivo*
+## *Tremolo Agresivo*
 
 *Ahora pasamos a aplicar un efecto del tremolo aún más fuerte. Para cambiar las propidades del efecto, basta con modificar el fichero `work/effects.orc`, que ahora cogerá la siguiente forma:*
 
@@ -556,12 +562,12 @@ synth -e effects.orc seno.orc doremi.sco seno_vibrato_agresivo.wav
 
 - Si ha generado algún efecto por su cuenta, explique en qué consiste, cómo lo ha implementado y qué resultado ha producido. Incluya, en el directorio `work/ejemplos`, los ficheros necesarios para apreciar el efecto, e indique, a continuación, la orden necesaria para generar los ficheros de audio usando el programa `synth`.
 
-*Hemos hecho la implementación del efecto llamado **fuzz**.* EXPLICAR QUE ES EL FUZZ I LA RESTA DE COSES QUE ET DIU L'ENUNCIAT
+*Hemos hecho la implementación del efecto llamado **fuzz**. A continuación está su presentación:*
 
 ---
 ---
 
-### *Fuzz*
+## *Fuzz*
 
 *El efecto **fuzz** es un tipo de distorsión de audio que produce un sonido muy característico y agresivo. Este efecto se utiliza frecuentemente en la música rock y otros géneros para añadir un tono áspero y sucio a la señal de audio. A diferencia de la distorsión más suave que se podría obtener con un overdrive o una saturación, el fuzz es mucho más pronunciado y se caracteriza por su alta ganancia y la compresión de la señal.*
 
@@ -635,22 +641,33 @@ synth -e work/effects.orc work/seno.orc work/doremi.sco work/audio_con_fuzz.wav
 
 - Use el instrumento para generar un vibrato de *parámetros razonables* e incluya una gráfica en la que se vea, claramente, la correspondencia entre los valores `N1`, `N2` e `I` con la señal obtenida.
 
-### Implementación del Vibrato con Síntesis FM
+### *Implementación del Vibrato con Síntesis FM*
 
-## Fórmula de Síntesis FM
+## *Fórmula de Síntesis FM*
 
-La fórmula para la síntesis de frecuencia modulada (FM) se define como:
+*La fórmula para la síntesis de frecuencia modulada (FM) se define como:*
 
-x(t) = A * sin(2π * (N1 * fc + N2 * fc * sin(2π * I * t / SamplingRate)))
+![Formula Señal Sintetizado con Síntesis FM](img/formulaFM.png)
 
-Donde:
-- x(t) es la señal de salida en el tiempo t.
-- A es la amplitud máxima de la señal.
-- N1 y N2 son parámetros de frecuencia.
-- fc es la frecuencia de la nota.
-- I es el índice de modulación en semitonos.
-- t es el tiempo en segundos.
-- SamplingRate es la frecuencia de muestreo.
+*El parámetro `d`, dentro de la definición del `índice de modulación` (modulation index), es el valor de `peak deviation` o `desviación máxima` de la frecuencia instantáneo de la central (la que se modula). La magia de dicha modulacíon de frecuencia se encuentra en los distintos efectos y relaciones que tienen entre sí los distintos parámetros que parametrizan dicha modulación de frecuencia.*
+
+*Si definimos a α (alpha) como la frecuencia de portadora y a β (beta) como la frecuencia moduladora, el cociente entre las 2, definido como:*
+
+**α/β = N1/N2**
+
+*da lugar a aspectos del espectro de instrumentos modulados interesantes. En concreto, si dicho cociente resulta en una fracción racional, como ahora 10/7 o 13/5 (máximo común divisor es 1), el instrumento resultante contiene contenido espectral harmónico, como el de la siguiente figura:*
+
+![Ejemplo de espectro harmónico](img/espectro_harmonico.png)
+*Figura extraída del artículo de `John M. Chowning`*
+
+*Haciendo resumen, para dos valores dados de `N1` y `N2`, junto con la frecuencia central de la nota a tocar, tenemos definida la frecuencia de modulación `fm`. La influencia de dicha `fm` vendrá dada por la amplitud de modulación, dada por el parámetro `I`. Por lo tanto, para poder generar un instrumento del tipo FM, hay que saber:*
+
+  - *N1*
+  - *N2*
+  - *f0 (frecuencia central o de portadora)*
+  - *I (índice de modulación)*
+
+*Procedemos a la implementación de este instrumento básico de síntesis FM. En el mismo artículo de `John M. Chowning` nos ofrece una implementacíon*
 
 
 ## Implementación en C++
@@ -673,6 +690,9 @@ AFEGIR CODI COMMAND()
 ```cpp
 AFEGIR CODI SYNTHESIZE()
 ```
+*Ha sido a través de esta implementación que hemos podido generar nuestros primeros sonidos de generación FM natural. A continuación enseñamos algunas gráficas para ejemplificar visualmente la relación existente entre los parámetros básicos de cualquier instrumento de síntesis FM (N1, N2 e I):*
+
+POSAR GRAFICS DE FFT I SEMBLANT ALS DEL REPO ON ES VEGI LA RELACION ENTRE PARAMETRES
 
 - Use el instrumento para generar un sonido tipo clarinete y otro tipo campana. Tome los parámetros del sonido (N1, N2 e I) y de la envolvente ADSR del citado artículo. Con estos sonidos, genere sendas escalas diatónicas (fichero `doremi.sco`) y ponga el resultado en los ficheros `work/doremi/clarinete.wav` y `work/doremi/campana.work`.
 
@@ -780,8 +800,7 @@ John Lennon *Happy Xmas (War Is Over)* (fichero `The_Christmas_Song_Lennon.sco`)
 de su agrado o composición. Se valorará la riqueza instrumental, su modelado y el resultado final.
 - Coloque los ficheros generados, junto a sus ficheros `score`, `instruments` y `efffects`, en el directorio
   `work/music`.
-- Indique, a continuación, la orden necesaria para generar cada una de las señales usando los distintos
-  ficheros.
+- Indique, a continuación, la orden necesaria para generar cada una de las señales usando los distintos ficheros.
 
 ---
 ---

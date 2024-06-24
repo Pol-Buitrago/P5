@@ -3,6 +3,7 @@
 #include "seno.h"
 #include "percussive.h"
 #include "senoFM.h"
+#include "SenoFMSimple.h"
 
 /*
   For each new instrument:
@@ -29,6 +30,9 @@ namespace upc {
     }
     if (name == "SenoFM") {
       pInst = (Instrument *) new SenoFM(parameters);
+    }
+    if (name == "SenoFMSimple") {
+      pInst = (Instrument *) new SenoFMSimple(parameters);
     }
     return pInst;
   }
