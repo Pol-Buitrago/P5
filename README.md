@@ -976,6 +976,10 @@ synth work/seno.orc work/doremi.sco work/campana.wav    # Tercera línea del sen
   * También puede colgar en el directorio work/doremi otras escalas usando sonidos *interesantes*. Por ejemplo, violines, pianos, percusiones, espadas láser de la
 	[Guerra de las Galaxias](https://www.starwars.com/), etc.
 
+  [Escuchar "Clarinete"](work/clarinete.wav)
+
+  [Escuchar "Campana"](work/campana.wav)
+
 ---
 ---
 
@@ -991,12 +995,89 @@ Use el programa `synth` para generar canciones a partir de su partitura MIDI. Co
 - Indique, a continuación, la orden necesaria para generar la señal (suponiendo que todos los archivos
   necesarios están en directorio indicado).
 
+    #### 1. "You've Got a Friend in Me" (Toy Story)
+
+    *Esta canción de Randy Newman se orquesta de la siguiente manera:*
+
+    - Pista 1: Instrumento solista (Clarinete)
+    - Pista 2: Bajo (Campana)
+
+    *Se generará el archivo de salida `A_Friend_in_me.wav` con los archivos necesarios en `work/music`.*
+
+    *Orden para generar la señal:*
+
+    ```bash
+    synth work/music/orquesta_toy_story.orc work/music/ToyStory_A_Friend_in_me.sco work/music/A_Friend_in_me.wav
+    ```
+
+    *Para escuchar la canción completa, haz clic en el siguiente enlace:*
+
+    [Escuchar "A Friend in Me"](work/music/A_Friend_in_me.wav)
+
+
 También puede orquestar otros temas más complejos, como la banda sonora de *Hawaii5-0* o el villacinco de
 John Lennon *Happy Xmas (War Is Over)* (fichero `The_Christmas_Song_Lennon.sco`), o cualquier otra canción
 de su agrado o composición. Se valorará la riqueza instrumental, su modelado y el resultado final.
 - Coloque los ficheros generados, junto a sus ficheros `score`, `instruments` y `efffects`, en el directorio
   `work/music`.
 - Indique, a continuación, la orden necesaria para generar cada una de las señales usando los distintos ficheros.
+
+    #### 2. "November Rain"
+
+    *Para esta pieza de Guns N' Roses, se utilizan los siguientes instrumentos:*
+
+    - Pista 1: Piano
+    - Pista 2: Vocales
+    - Pista 3: Sección de Cuerdas
+    - Pista 4: Guitarra líder y rítmica
+    - Pista 5: Sección de Cañas
+    - Pista 6: Sección de Cuerdas de Respaldo
+    - Pista 7: Percusión
+
+    *Orden para generar las señales:*
+
+    ```bash
+    midi2sco --bpm 80 work/music/November_rain.mid work/music/November_rain.sco
+    synth work/music/orquesta_November_rain.orc work/music/November_rain.sco work/music/November_rain.wav
+    ```
+
+    *Para escuchar la canción completa, haz clic en el siguiente enlace:*
+
+    [Escuchar "November Rain"](work/music/November_rain.wav)
+
+    #### 3. "Help!" (The Beatles)
+
+    *Para esta canción de The Beatles, se usan los siguientes instrumentos:*
+
+    - Pista 1: Piano
+    - Pista 2: Vocales
+    - Pista 3: Sección de Cuerdas
+    - Pista 4: Guitarra líder y rítmica
+    - Pista 5: Sección de Cañas
+    - Pista 6: Sección de Cuerdas de Respaldo
+    - Pista 7: Percusión
+
+    *Se han creado dos versiones ligeramente diferentes de la orquestación de "Help!" para explorar distintas interpretaciones sonoras. La primera versión se enfoca en mantener una percusión más prominente y definida, utilizando ajustes estándar para los instrumentos. En contraste, la segunda versión busca un enfoque más suave, con una percusión más sutil y ajustes específicos en el tiempo de decaimiento de los instrumentos, lo cual altera el ritmo y la dinámica general de la canción.*
+
+    *Orden para generar las señales:*
+
+    ```bash
+    midi2sco --bpm 192 work/music/Help.mid work/music/Help.sco
+    synth work/music/orquesta_Help.orc work/music/Help.sco work/music/Help.wav
+    ```
+
+    *Para escuchar la canción completa, haz clic en el siguiente enlace:*
+
+    [Escuchar "Help"](work/music/Help.wav)
+
+    [Escuchar "Help (Alternative version)"](work/music/Help2.wav)
+
+
+    #### Detalles adicionales
+
+    *Cada instrumento ha sido ajustado seleccionando los parámetros en base al tipo de sonido deseado y las características específicas de cada canción. Este proceso asegura que cada instrumento contribuya de manera armoniosa al conjunto musical, manteniendo una coherencia estilística y expresiva en toda la composición.*
+
+    *Se ha puesto un énfasis especial en la riqueza instrumental, garantizando que cada instrumento no solo cumpla su función melódica o armónica, sino que también añada textura y profundidad al arreglo general. Esperamos que, de este modo, nuestro oyente disfrute al máximo de su experiencia auditiva, sumergiéndose en una interpretación musical enriquecedora y envolvente.*
 
 ---
 ---

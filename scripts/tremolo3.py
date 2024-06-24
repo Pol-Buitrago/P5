@@ -8,7 +8,7 @@ from scipy.signal import hilbert
 plt.rcParams['figure.figsize'] = [10, 6]  # Ancho x Alto en pulgadas
 
 # Ruta del archivo de audio
-file_path = os.path.join('work', 'seno_vibrato_agresivo.wav')
+file_path = os.path.join('work', 'seno_vibrato_normal.wav')
 
 # Cargar archivo de audio y frecuencia de muestreo
 sampling_rate, audio_data = wavfile.read(file_path)

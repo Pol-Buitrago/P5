@@ -60,17 +60,17 @@ SenoFM::SenoFM(const std::string &param)
         adsr.set(adsr_a, 0, adsr_s, adsr_r, 1.5F);
     }
 
-    mod_phase = 0;
-    index_sen = 0;
+    modulation_phase = 0;
+    index_sensitivity = 0;
 
     std::string file_name;
     static string kv_null;
-    tbl.resize(N);
+    waveform_table.resize(N);
     float phase = 0, step = 2 * M_PI / (float)N;
     index = 0;
     for (int i = 0; i < N; ++i)
     {
-        tbl[i] = sin(phase);
+        waveform_table[i] = sin(phase);
         phase += step;
     }
 }
@@ -83,21 +83,21 @@ void SenoFM::command(long cmd, long note, long vel)
         bActive = true;
         adsr.start();
         float f0note = pow(2, ((float)note - 69) / 12) * 440; // Convert note to frequency (Hz)
-        Nnote = 1 / f0note * SamplingRate;                    // Note period in samples
-        index_step = (float)N / Nnote;                        // Table step per note period
+        N_notes = 1 / f0note * SamplingRate;                    // Note period in samples
+        index_step = (float)N / N_notes;                        // Table step per note period
 
         // Reset counters/phases
         index = 0;
-        index_sen = 0;
-        mod_phase = 0;
+        index_sensitivity = 0;
+        modulation_phase = 0;
         decay_count = 0;
         decay_count_I = 0;
 
-        fm = f0note * N2 / N1;                         // Modulating frequency
-        mod_phase_step = 2 * M_PI * fm / SamplingRate; // Step of the modulating sine wave
+        fm_modulation = f0note * N2 / N1;                         // Modulating frequency
+        phase_step_size = 2 * M_PI * fm_modulation / SamplingRate; // Step of the modulating sine wave
 
-        note_int = round(Nnote);
-        x_tm.resize(note_int);
+        note_int = round(N_notes);
+        temp.resize(note_int);
 
         if (vel > 127)
             vel = 127;
@@ -142,12 +142,12 @@ const vector<float> &SenoFM::synthesize()
             I_array[i] = I_array[i] * pow(envelope, decay_count_I);
     }
 
-    // Fill x_tm with one period of the new signal
+    // Fill temp with one period of the new signal
     for (unsigned int i = 0; i < (unsigned int)note_int; ++i)
     {
 
         // Check if floating point index is out of bounds
-        if ((long unsigned int)floor(index) > tbl.size() - 1)
+        if ((long unsigned int)floor(index) > waveform_table.size() - 1)
             index = index - floor(index);
 
         // Obtain integer index
@@ -165,7 +165,7 @@ const vector<float> &SenoFM::synthesize()
             next_index = index_floor + 1;
         }
         // Interpolate table values
-        x_tm[i] = ((1 - weight) * tbl[index_floor] + (weight)*tbl[next_index]);
+        temp[i] = ((1 - weight) * waveform_table[index_floor] + (weight)*waveform_table[next_index]);
         // Update real index
         index = index + index_step;
     }
@@ -174,18 +174,18 @@ const vector<float> &SenoFM::synthesize()
     for (unsigned int i = 0; i < x.size(); ++i)
     {
         // Check if floating point index is out of bounds
-        if (index_sen < 0)
+        if (index_sensitivity < 0)
         {
-            index_sen = Nnote + index_sen;
+            index_sensitivity = N_notes + index_sensitivity;
         }
-        if ((int)floor(index_sen) > note_int - 1)
+        if ((int)floor(index_sensitivity) > note_int - 1)
         {
 
-            index_sen = index_sen - (note_int - 1);
+            index_sensitivity = index_sensitivity - (note_int - 1);
         }
         // Obtain integer index
-        index_floor_fm = floor(index_sen);
-        weight_fm = index_sen - index_floor_fm;
+        index_floor_fm = floor(index_sensitivity);
+        weight_fm = index_sensitivity - index_floor_fm;
 
         // Adjust interpolation indexes if necessary
         if (index_floor_fm == note_int - 1)
@@ -198,15 +198,15 @@ const vector<float> &SenoFM::synthesize()
             next_index_fm = index_floor_fm + 1;
         }
         // Interpolate table values
-        x[i] = A * ((1 - weight_fm) * x_tm[index_floor_fm] + weight_fm * (x_tm[next_index_fm]));
+        x[i] = A * ((1 - weight_fm) * temp[index_floor_fm] + weight_fm * (temp[next_index_fm]));
 
         // Update real index (phase) and modulated phase
-        index_sen = index_sen + 1 - I_array[i] * sin(mod_phase);
-        mod_phase = mod_phase + mod_phase_step;
+        index_sensitivity = index_sensitivity + 1 - I_array[i] * sin(modulation_phase);
+        modulation_phase = modulation_phase + phase_step_size;
     }
 
-    while (mod_phase > M_PI)
-        mod_phase -= 2 * M_PI;
+    while (modulation_phase > M_PI)
+        modulation_phase -= 2 * M_PI;
 
     // Apply exponential or ADSR envelope modulation
     for (unsigned int i = 0; i < x.size(); i++)
