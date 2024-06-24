@@ -622,7 +622,7 @@ synth -e work/effects.orc work/seno.orc work/doremi.sco work/audio_con_fuzz.wav
 
 *En el espectrograma del audio con el efecto fuzz, se puede observar que la señal original ha sido significativamente alterada. A diferencia de los efectos de vibrato y tremolo, que modulan la frecuencia o la amplitud de la señal original, el fuzz introduce armónicos y distorsión en la señal, resultando en un espectro de frecuencia mucho más complejo. Esto se traduce en un sonido más agresivo y áspero, con una amplia gama de frecuencias adicionales que se extienden alrededor de la frecuencia central de cada nota.*
 
-![Comparación Espectograma Fuzz](img/audio_comparison_Fuzz.png)
+![Comparación Espectograma Fuzz](img/audio_comparison_fuzz.png)
 
 *En el espectrograma, esta dispersión de frecuencias se manifiesta como bandas más anchas y ruidosas alrededor de las frecuencias fundamentales de las notas. Esto da como resultado un sonido más lleno y rico, aunque menos puro y afinado. La distorsión característica del fuzz es evidente en la forma en que la energía se distribuye a lo largo del espectro, mostrando la complejidad y el caos introducidos por este efecto.*
 
@@ -680,7 +680,8 @@ synth -e work/effects.orc work/seno.orc work/doremi.sco work/audio_con_fuzz.wav
 ***Constructor SenoFM()***
 
 ```cpp
-SenoFMSimple::SenoFMSimple(const std::string &param)
+// Constructor initializes the ADSR envelope and sets default parameters.
+SenoFM::SenoFM(const std::string &param)
     : adsr(SamplingRate, param)
 {
     bActive = false;
@@ -696,9 +697,22 @@ SenoFMSimple::SenoFMSimple(const std::string &param)
     if (!kv.to_int("N", N))
         N = 40;
 
-    // Modulation index
-    if (!kv.to_float("I", I))
-        I = 1;
+    // Attack, Decay, Sustain, Release parameters for ADSR envelope.
+    if (!kv.to_float("ADSR_A", adsr_a))
+        adsr_a = 0.1;
+
+    if (!kv.to_float("ADSR_D", adsr_d))
+        adsr_d = 0.05;
+
+    if (!kv.to_float("ADSR_S", adsr_s))
+        adsr_s = 0.5;
+
+    if (!kv.to_float("ADSR_R", adsr_r))
+        adsr_r = 0.1;
+
+    // Modulation index 1.
+    if (!kv.to_float("I1", I1))
+        I1 = 1;
 
     // Default values for N1 and N2.
     if (!kv.to_float("N1", N1))
@@ -707,41 +721,57 @@ SenoFMSimple::SenoFMSimple(const std::string &param)
     if (!kv.to_float("N2", N2))
         N2 = 1;
 
-    // initialize default source & modulated table values
-    tbl_signal.resize(N);
-    tbl_modulation.resize(N);
-    float phase = 0, step = 2 * M_PI / (float)N;
-    for (int i = 0; i < N; ++i)
+    // Default envelope for additional parameters.
+    if (!kv.to_float("envelope", envelope))
+        envelope = 0;
+
+    // Configure ADSR envelope based on 'envelope'.
+    if (envelope == -1)
     {
-        tbl_signal[i] = sin(phase);
-        tbl_modulation[i] = sin(phase);
-        phase += step;
+        adsr.set(adsr_a, 0, adsr_s, adsr_r, 1.5F);
     }
 
-    // initialize table indexes to 0
-    modulation_table_index = 0;
-    signal_table_index = 0;
+    modulation_phase = 0;
+    index_sensitivity = 0;
+
+    std::string file_name;
+    static string kv_null;
+    waveform_table.resize(N);
+    float phase = 0, step = 2 * M_PI / (float)N;
+    index = 0;
+    for (int i = 0; i < N; ++i)
+    {
+        waveform_table[i] = sin(phase);
+        phase += step;
+    }
 }
 ```
 
 ***Command()***
 ```cpp
-void SenoFMSimple::command(long cmd, long note, long vel)
+// Process commands to start, sustain, or release a note.
+void SenoFM::command(long cmd, long note, long vel)
 {
     if (cmd == 9)
     { //'Key' pressed: trigger attack phase
         bActive = true;
         adsr.start();
+        float f0note = pow(2, ((float)note - 69) / 12) * 440; // Convert note to frequency (Hz)
+        N_notes = 1 / f0note * SamplingRate;                    // Note period in samples
+        index_step = (float)N / N_notes;                        // Table step per note period
 
-        // computation of signal table index increments
-        float fc = pow(2, ((float)note - 69) / 12) * 440; // Convert note to frequency (Hz)
-        increment_signal_table = ((fc / SamplingRate) * tbl_signal.size());
+        // Reset counters/phases
+        index = 0;
+        index_sensitivity = 0;
+        modulation_phase = 0;
+        decay_count = 0;
+        decay_count_I = 0;
 
-        // computation of modulation table index increments
+        fm_modulation = f0note * N2 / N1;                         // Modulating frequency
+        phase_step_size = 2 * M_PI * fm_modulation / SamplingRate; // Step of the modulating sine wave
 
-        // we know that fc = fm * (N1/N2) so fm = fc * (N2/N1)
-        float fm = fc * (N2 / N1);
-        increment_modulation_table = ((fm / SamplingRate) * tbl_signal.size());
+        note_int = round(N_notes);
+        temp.resize(note_int);
 
         if (vel > 127)
             vel = 127;
@@ -754,7 +784,9 @@ void SenoFMSimple::command(long cmd, long note, long vel)
     }
     else if (cmd == 0)
     {
-        adsr.end();
+        // Faster release, ensuring smooth transition
+        adsr.set(adsr_s, adsr_a, adsr_d, adsr_r / 4, 1.5F);
+        adsr.stop();
     }
 }
 ```
@@ -762,7 +794,8 @@ void SenoFMSimple::command(long cmd, long note, long vel)
 ***Synthesize()***
 
 ```cpp
-const vector<float> &SenoFMSimple::synthesize()
+// Synthesize the waveform using FM synthesis with ADSR envelope modulation.
+const vector<float> &SenoFM::synthesize()
 {
     if (not adsr.active())
     {
@@ -773,46 +806,104 @@ const vector<float> &SenoFMSimple::synthesize()
     else if (not bActive)
         return x;
 
-    // create intermediate float array with modulated signal values (interpolated)
-    std::vector<float> modulated_values; // create array and resize
-    modulated_values.resize(x.size());
+    unsigned int index_floor, next_index; // Interpolation indexes
+    float weight, weight_fm;              // Interpolation weights
+    int index_floor_fm, next_index_fm;    // Frequency interpolation indexes
+    std::vector<float> I_array(x.size()); // Array for modulation index I
 
-    // assign values
-    for (int i = 0; i < x.size(); i++)
+    // Initialize I_array with user-input modulation index (constant)
+    for (unsigned int i = 0; i < x.size(); i++)
     {
-        bool condition = (modulation_table_index == int(modulation_table_index));
-        modulated_values[i] = condition ? tbl_modulation[modulation_table_index] : I * getInterpolatedValue(modulation_table_index, string("modulation_table"));
-        modulation_table_index += increment_modulation_table;
-        // control index bounds
-        if (modulation_table_index >= (float)tbl_modulation.size())
-        {
-            modulation_table_index -= (float)tbl_modulation.size();
-        }
+        I_array[i] = I2;
+        // Apply exponential envelope if selected
+        if (envelope > 0)
+            I_array[i] = I_array[i] * pow(envelope, decay_count_I);
     }
 
-    // populate x array with signal values: x[i]= A * sin(index_signal_table + I * sin(index_modulation_table))
-    for (int i = 0; i < x.size(); i++)
+    // Fill temp with one period of the new signal
+    for (unsigned int i = 0; i < (unsigned int)note_int; ++i)
     {
-        float general_index;
-        // check wether signal_table_index is + or -
-        if (signal_table_index < 0)
+
+        // Check if floating point index is out of bounds
+        if ((long unsigned int)floor(index) > waveform_table.size() - 1)
+            index = index - floor(index);
+
+        // Obtain integer index
+        index_floor = (int)floor(index);
+        weight = index - index_floor;
+
+        // Adjust interpolation indexes if necessary
+        if (index_floor == (unsigned int)N - 1)
         {
-            general_index = signal_table_index + tbl_signal.size();
+            next_index = 0;
+            index_floor = N - 1;
         }
         else
         {
-            general_index = signal_table_index;
+            next_index = index_floor + 1;
         }
-        bool condition = (general_index == int(general_index));
-        x[i] = condition ? tbl_signal[general_index] : getInterpolatedValue(general_index, string("signal_table"));
-        signal_table_index += increment_signal_table + modulated_values[i];
+        // Interpolate table values
+        temp[i] = ((1 - weight) * waveform_table[index_floor] + (weight)*waveform_table[next_index]);
+        // Update real index
+        index = index + index_step;
+    }
 
-        // control index bounds
-        if (signal_table_index >= (float)tbl_signal.size())
+    // Modulate the signal
+    for (unsigned int i = 0; i < x.size(); ++i)
+    {
+        // Check if floating point index is out of bounds
+        if (index_sensitivity < 0)
         {
-            signal_table_index -= (float)tbl_signal.size();
+            index_sensitivity = N_notes + index_sensitivity;
+        }
+        if ((int)floor(index_sensitivity) > note_int - 1)
+        {
+
+            index_sensitivity = index_sensitivity - (note_int - 1);
+        }
+        // Obtain integer index
+        index_floor_fm = floor(index_sensitivity);
+        weight_fm = index_sensitivity - index_floor_fm;
+
+        // Adjust interpolation indexes if necessary
+        if (index_floor_fm == note_int - 1)
+        {
+            next_index_fm = 0;
+            index_floor_fm = note_int - 1;
+        }
+        else
+        {
+            next_index_fm = index_floor_fm + 1;
+        }
+        // Interpolate table values
+        x[i] = A * ((1 - weight_fm) * temp[index_floor_fm] + weight_fm * (temp[next_index_fm]));
+
+        // Update real index (phase) and modulated phase
+        index_sensitivity = index_sensitivity + 1 - I_array[i] * sin(modulation_phase);
+        modulation_phase = modulation_phase + phase_step_size;
+    }
+
+    while (modulation_phase > M_PI)
+        modulation_phase -= 2 * M_PI;
+
+    // Apply exponential or ADSR envelope modulation
+    for (unsigned int i = 0; i < x.size(); i++)
+    {
+        if (envelope != 0)
+        {
+            if (envelope > 0) // Exponential decay based on 'envelope'
+            {
+                x[i] = x[i] * pow(envelope, decay_count);
+                decay_count++;
+            }
+            else if (adsr.active() && envelope == -1)
+            {
+                x[i] = x[i] * adsr_s; // Adjust level to prevent attack overshoot
+            }
         }
     }
+    if (envelope <= 0)
+        adsr(x); // Apply envelope to x and update ADSR internal state
     return x;
 }
 ```
@@ -906,65 +997,7 @@ float SenoFMSimple::getInterpolatedValue(const float phas, string table)
 
 Una vez generados los sonidos, generaremos escalas diatónicas utilizando el archivo `doremi.sco` y los sonidos especificados:
 
-#### *Archivo `doremi.sco` para Clarinete*
-
-```plaintext
-Escala diatónica de Do mayor usando sonido tipo clarinete
-0	9	1	60	100	; Onset del sonido
-0	12	1	10	1	; Parámetros del instrumento (Clarinete)
-1	12	1	10	0	; Fin de la nota
-1	9	1	62	100
-1	12	1	10	1
-2	12	1	10	0
-2	9	1	64	100
-2	12	1	10	1
-3	12	1	10	0
-3	9	1	65	100
-3	12	1	10	1
-4	12	1	10	0
-4	9	1	67	100
-4	12	1	10	1
-5	12	1	10	0
-5	9	1	69	100
-5	12	1	10	1
-6	12	1	10	0
-6	9	1	71	100
-6	12	1	10	1
-7	12	1	10	0
-7	9	1	72	100
-7	12	1	10	1
-```
-
-#### *Archivo `doremi.sco` para Campana*
-
-```plaintext
-Escala diatónica de Do mayor usando sonido tipo campana
-0	9	1	60	100	; Onset del sonido
-0	12	1	20	1	; Parámetros del instrumento (Campana)
-1	12	1	20	0	; Fin de la nota
-1	9	1	62	100
-1	12	1	20	1
-2	12	1	20	0
-2	9	1	64	100
-2	12	1	20	1
-3	12	1	20	0
-3	9	1	65	100
-3	12	1	20	1
-4	12	1	20	0
-4	9	1	67	100
-4	12	1	20	1
-5	12	1	20	0
-5	9	1	69	100
-5	12	1	20	1
-6	12	1	20	0
-6	9	1	71	100
-6	12	1	20	1
-7	12	1	20	0
-7	9	1	72	100
-7	12	1	20	1
-```
-
-### *Generación de Archivos de Audio*
+#### *Generación de Archivos de Audio*
 
 Una vez definidos los archivos `doremi.sco` con las escalas diatónicas, podemos usar el programa `synth` para generar los archivos de audio `clarinete.wav` y `campana.wav`:
 
