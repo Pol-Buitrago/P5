@@ -667,8 +667,11 @@ synth -e work/effects.orc work/seno.orc work/doremi.sco work/audio_con_fuzz.wav
   - *f0 (frecuencia central o de portadora)*
   - *I (índice de modulación)*
 
-*Procedemos a la implementación de este instrumento básico de síntesis FM. En el mismo artículo de `John M. Chowning` nos ofrece una implementacíon*
+*Procedemos a la implementación de este instrumento básico de síntesis FM. En el mismo artículo de `John M. Chowning` nos ofrece una implementacíon:*
 
+![Implementación de un instrumento de síntesis FM básico](img/SenoFM_simple.png)
+
+*Podemos ver que para la generación de un determinado instrumento mediante síntesis FM básica, hay que disponer de los 4 parámetros de entrada (situados en la parte superior de la figura). Estos parámetros son los que es extraen del diccionario `KeyValue kv(param)` en constructor de dicho instrumento (en parte, ya que algunos parámetros son deducidos a partir de otros, referirse a la fórmulas para su correcta interpretación).*
 
 ## Implementación en C++
 
@@ -694,15 +697,23 @@ AFEGIR CODI SYNTHESIZE()
 
 POSAR GRAFICS DE FFT I SEMBLANT ALS DEL REPO ON ES VEGI LA RELACION ENTRE PARAMETRES
 
+DEMOSTRAR MITJANCANT ELS GRAFICS QUE AMB VALORS SEMBLANTS AL VIBRATO (I=0.5, FM=10) LA FRECUENCIA CENTRAL PERD ENERGIA I TMB QUE AUGMENTANT ENCARA MÉS LA I I TMB VALORS DEL COCIENT N2/N1 FAN QUE FREC CENTRAL PERDI ENCARA NMES ENERGIA
+
 - Use el instrumento para generar un sonido tipo clarinete y otro tipo campana. Tome los parámetros del sonido (N1, N2 e I) y de la envolvente ADSR del citado artículo. Con estos sonidos, genere sendas escalas diatónicas (fichero `doremi.sco`) y ponga el resultado en los ficheros `work/doremi/clarinete.wav` y `work/doremi/campana.work`.
 
 ### Generación de Sonidos y Escalas Diatónicas
 
-Para generar los sonidos tipo clarinete y campana, utilizaremos los parámetros especificados en el artículo de Chowning para cada tipo de sonido, incluyendo las envolventes ADSR adecuadas.
+*Para generar los sonidos tipo clarinete y campana, utilizaremos los parámetros especificados en el artículo de Chowning para cada tipo de sonido, incluyendo las envolventes ADSR adecuadas.*
+
+*Mencionar también que para la implementación más compleja y asimismo más completa y correcta de distintos instrumentos de modulación FM hay que modificar el esquema de implementación, de manera que ahora el más avanzado tiene el siguiente aspecto:*
+
+![Implementación de un instrumento de síntesis FM avanzado](img/SenoFM_avanzado.png)
+
+*Mediante esta implementación, seremos capaces de producir instrumentos con aún más riqueza espectral y que encima es dinámica y variante con el tiempo, mediante la varianza de las envolventes de la onda portadora y el índice de modulación `I`.*
 
 #### Generacíon Clarinete
 
-
+**
 
 #### Generación Campana
 
@@ -798,7 +809,7 @@ Use el programa `synth` para generar canciones a partir de su partitura MIDI. Co
 También puede orquestar otros temas más complejos, como la banda sonora de *Hawaii5-0* o el villacinco de
 John Lennon *Happy Xmas (War Is Over)* (fichero `The_Christmas_Song_Lennon.sco`), o cualquier otra canción
 de su agrado o composición. Se valorará la riqueza instrumental, su modelado y el resultado final.
-- Coloque los ficheros generados, junto a sus ficheros `score`, `instruments` y `effects`, en el directorio
+- Coloque los ficheros generados, junto a sus ficheros `score`, `instruments` y `efffects`, en el directorio
   `work/music`.
 - Indique, a continuación, la orden necesaria para generar cada una de las señales usando los distintos ficheros.
 
